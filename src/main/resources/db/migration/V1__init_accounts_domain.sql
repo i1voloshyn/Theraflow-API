@@ -1,7 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS public;
 
 CREATE TYPE account_type AS ENUM ('THERAPIST', 'GUARDIAN');
-CREATE TYPE account_role AS ENUM ('USER');
 CREATE TYPE account_status AS ENUM ('PENDING_VERIFICATION', 'ACTIVE', 'DISABLED');
 CREATE TYPE auth_provider AS ENUM ('PASSWORD', 'GOOGLE', 'APPLE');
 
@@ -9,7 +8,6 @@ CREATE TABLE accounts
 (
     id         UUID                              DEFAULT gen_random_uuid(),
     type       account_type             NOT NULL,
-    role       account_role             NOT NULL DEFAULT 'USER',
     status     account_status           NOT NULL DEFAULT 'PENDING_VERIFICATION',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
