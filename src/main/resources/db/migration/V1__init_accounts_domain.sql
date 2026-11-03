@@ -17,7 +17,6 @@ CREATE TABLE accounts
 
 CREATE TABLE auth_identities
 (
-    id               UUID                              DEFAULT gen_random_uuid(),
     account_id       UUID                     NOT NULL,
     provider         auth_provider            NOT NULL,
     provider_user_id TEXT                     NOT NULL,
@@ -28,7 +27,7 @@ CREATE TABLE auth_identities
 
     CONSTRAINT uq_auth_identities_provider_user_id UNIQUE (provider, provider_user_id),
 
-    CONSTRAINT pk_auth_identities PRIMARY KEY (id),
+    CONSTRAINT pk_auth_identities PRIMARY KEY (account_id),
     CONSTRAINT fk_auth_identities_accounts FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ,
 
     CONSTRAINT ck_accounts_email_normalized
