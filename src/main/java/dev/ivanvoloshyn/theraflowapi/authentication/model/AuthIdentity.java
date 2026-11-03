@@ -1,13 +1,15 @@
 package dev.ivanvoloshyn.theraflowapi.authentication.model;
 
+import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import org.hibernate.annotations.Generated;
@@ -21,8 +23,7 @@ import java.util.UUID;
 @Getter
 public class AuthIdentity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(insertable = false, updatable = false)
+    @Column(name = "account_id")
     private UUID id;
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
@@ -39,6 +40,11 @@ public class AuthIdentity {
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(insertable = false)
     private Instant updatedAt;
+
+    @OneToOne
+    @JoinColumn(name = "account_id", referencedColumnName = "id")
+    @MapsId
+    private Account account;
 
     public AuthIdentity() {
     }

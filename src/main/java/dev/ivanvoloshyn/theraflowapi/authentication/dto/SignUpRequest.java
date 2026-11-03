@@ -8,6 +8,7 @@ import org.jspecify.annotations.NullMarked;
 public record SignUpRequest(
         @Email
         String email,
-        AccountType type
+        AccountType type,
+        String password
 ) {
 }

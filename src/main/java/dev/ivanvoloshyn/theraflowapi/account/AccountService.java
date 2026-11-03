@@ -14,6 +14,4 @@ public class AccountService {
     public Account createAccount(AccountType type) {
         return accountRepository.save(new Account(type, AccountStatus.PENDING_VERIFICATION));
     }
-
-
 }

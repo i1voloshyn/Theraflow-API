@@ -2,6 +2,7 @@ package dev.ivanvoloshyn.theraflowapi.account.model;
 
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +26,6 @@ import java.util.UUID;
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(insertable = false, updatable = false)
     private UUID id;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -34,11 +35,15 @@ public class Account {
     @Setter
     private AccountStatus status;
     @Generated(event = EventType.INSERT)
-    @Column(insertable = false)
+    @Column(insertable = false, updatable = false)
     private Instant createdAt;
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(insertable = false)
+    @Column(insertable = false, updatable = false)
     private Instant updatedAt;
+
+    @Setter
+    @OneToOne(mappedBy = "account")
+    private AuthIdentity authIdentity;
 
     public Account() {
     }
