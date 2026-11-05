@@ -29,7 +29,7 @@ class AccountRepositoryTest {
     @Test
     @DisplayName("save should return a persisted account with a generated ID and timestamps when the account is new")
     void saveNewAccount() {
-        Account account = new Account(AccountType.THERAPIST, AccountStatus.PENDING_VERIFICATION);
+        Account account =AccountTestBuilder.therapistUnverifiedAccount();
 
         Account savedAccount = accountRepository.save(account);
         entityManager.flush();
@@ -39,6 +39,7 @@ class AccountRepositoryTest {
         assertThat(savedAccount.getUpdatedAt()).isNotNull();
 
         Account persistedAccount = entityManager.find(Account.class, savedAccount.getId());
+
         assertThat(persistedAccount).isNotNull();
         assertThat(persistedAccount.getStatus()).isEqualTo(AccountStatus.PENDING_VERIFICATION);
         assertThat(persistedAccount.getCreatedAt()).isEqualTo(savedAccount.getCreatedAt());
