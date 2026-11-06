@@ -45,7 +45,6 @@ public class Account {
     @Column(insertable = false, updatable = false)
     private Instant updatedAt;
 
-    @Setter
     @OneToOne(mappedBy = "account")
     private AuthIdentity authIdentity;
 
@@ -55,6 +54,11 @@ public class Account {
     public Account(AccountType type, AccountStatus status) {
         this.type = type;
         this.status = status;
+    }
+
+    public void setAuthIdentity(AuthIdentity identity) {
+        authIdentity = identity;
+        identity.setAccount(this);
     }
 
 }

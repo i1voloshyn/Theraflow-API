@@ -2,7 +2,6 @@ package dev.ivanvoloshyn.theraflowapi.account;
 
 import dev.ivanvoloshyn.theraflowapi.TestContainerConfiguration;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
-import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
