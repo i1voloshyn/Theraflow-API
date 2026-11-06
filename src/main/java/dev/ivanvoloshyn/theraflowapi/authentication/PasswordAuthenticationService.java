@@ -2,7 +2,7 @@ package dev.ivanvoloshyn.theraflowapi.authentication;
 
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
-import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class PasswordAuthenticationService {
     private final AuthIdentityRepository authIdentityRepository;
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
-    public void signUp(SignUpRequest request) {
+    public void signUp(PasswordSignUpRequest request) {
         if (authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.PASSWORD, request.email())) {
             throw new ResourceConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }

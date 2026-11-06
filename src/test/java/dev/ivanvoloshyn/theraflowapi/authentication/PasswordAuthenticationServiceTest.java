@@ -1,7 +1,7 @@
 package dev.ivanvoloshyn.theraflowapi.authentication;
 
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
-import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.exception.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.ResourceConflictException;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthenticationServiceTest {
+class PasswordAuthenticationServiceTest {
     @Mock
     private AuthIdentityRepository authIdentityRepository;
     @Mock
@@ -30,7 +30,7 @@ class AuthenticationServiceTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private PasswordAuthenticationService authenticationService;
 
     @DisplayName("""
             signUp
@@ -39,7 +39,7 @@ class AuthenticationServiceTest {
             """)
     @Test
     void signUp_1() {
-        SignUpRequest request = SignUpRequestTestBuilder.defaultTherapistSignUpRequest();
+        PasswordSignUpRequest request = SignUpRequestTestBuilder.defaultTherapistSignUpRequest();
 
         when(authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.PASSWORD, request.email()))
                 .thenReturn(true);

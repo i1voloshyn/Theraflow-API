@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public record SignUpRequest(
+public record PasswordSignUpRequest(
         @Email
         String email,
         AccountType type,
