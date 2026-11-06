@@ -5,6 +5,12 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
+    THERAFLOW_ERROR(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Theraflow app error",
+            "See logs for details"
+    ),
+
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "Email exists",
