@@ -6,6 +6,7 @@ import dev.ivanvoloshyn.theraflowapi.account.AccountTestBuilder;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,6 +31,29 @@ class AuthIdentityRepositoryTest {
     private AuthIdentityRepository authIdentityRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private EntityManager entityManager;
+
+    @Test
+    void shouldPersistNewAuthIdentity() {
+        Account accountToSave = AccountTestBuilder.therapistUnverifiedAccount();
+        AuthIdentity authIdentityToSave = AuthIdentityTestBuilder.passwordProviderAuthIdentity();
+
+        Account savedAccount = accountRepository.save(accountToSave);
+        savedAccount.setAuthIdentity(authIdentityToSave);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<AuthIdentity> saved = authIdentityRepository.findById(savedAccount.getId());
+
+        assertTrue(saved.isPresent());
+        assertThat(saved).hasValueSatisfying(identity -> {
+            assertThat(identity.getAccount().getId()).isEqualTo(savedAccount.getId());
+            assertThat(identity.getProviderUserId()).isEqualTo(authIdentityToSave.getProviderUserId());
+            assertThat(identity.getEmail()).isEqualTo(authIdentityToSave.getEmail());
+        });
+    }
 
     @DisplayName("""
             existsByProviderAndProviderUserId
