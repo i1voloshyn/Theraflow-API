@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.account.model;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,7 +46,7 @@ public class Account {
     @Column(insertable = false, updatable = false)
     private Instant updatedAt;
 
-    @OneToOne(mappedBy = "account")
+    @OneToOne(mappedBy = "account",cascade = CascadeType.PERSIST)
     private AuthIdentity authIdentity;
 
     public Account() {
