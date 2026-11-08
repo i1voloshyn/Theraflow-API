@@ -20,6 +20,22 @@ public class SignUpTestBuilder {
         );
     }
 
+    public static PasswordSignUpRequest weakPasswordSignUpRequest() {
+        return new PasswordSignUpRequest(
+                DEFAULT_EMAIL,
+                AccountType.THERAPIST,
+                "weak_password"
+        );
+    }
+
+    public static PasswordSignUpRequest invalidEmailSignUpRequest() {
+        return new PasswordSignUpRequest(
+                "invalid_email.com",
+                AccountType.THERAPIST,
+                CORRECT_PASSWORD
+        );
+    }
+
     public static SignUpResponse defaultTherapistSignUpResponse() {
         return new SignUpResponse(
                 UUID.fromString(Constants.TEST_UUID),

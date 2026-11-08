@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.authentication;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.config.SecurityConfiguration;
+import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.fixtures.SignUpTestBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = AuthenticationController.class)
@@ -61,6 +64,46 @@ class AuthenticationControllerTest {
 
         assertThat(actualResponse).isEqualTo(expectedResponse);
         verify(passwordAuthenticationService).signUp(request);
+    }
+
+    @DisplayName("""
+            signUp
+            SHOULD return BAD_REQUEST
+            WITH error_code WEAK_PASSWORD
+            FOR weak password
+            """)
+    @Test
+    void signUp_error() throws Exception {
+        PasswordSignUpRequest request = SignUpTestBuilder.weakPasswordSignUpRequest();
+
+        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.PASSWORD_WEAK.name()));
+
+        verifyNoInteractions(passwordAuthenticationService);
+    }
+
+    @DisplayName("""
+            signUp
+            SHOULD return BAD_REQUEST
+            WITH error_code VALIDATION_FAILED
+            FOR invalid email
+            """)
+    @Test
+    void signUp_error1() throws Exception {
+        PasswordSignUpRequest request = SignUpTestBuilder.invalidEmailSignUpRequest();
+
+        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_FAILED.name()));
+
+        verifyNoInteractions(passwordAuthenticationService);
     }
 
 }
