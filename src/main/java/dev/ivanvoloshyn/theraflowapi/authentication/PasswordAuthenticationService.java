@@ -2,6 +2,7 @@ package dev.ivanvoloshyn.theraflowapi.authentication;
 
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
@@ -23,9 +24,10 @@ public class PasswordAuthenticationService {
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final AuthenticationMapper authenticationMapper;
 
     @Transactional
-    public void signUp(PasswordSignUpRequest request) {
+    public SignUpResponse signUp(PasswordSignUpRequest request) {
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
         if (authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.PASSWORD, normalizedEmail)) {
             throw new ResourceConflictException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -40,5 +42,7 @@ public class PasswordAuthenticationService {
         account.setAuthIdentity(authIdentity);
 
         applicationEventPublisher.publishEvent(new EmailVerificationRequest()); //todo sending email is not yet implemented
+
+        return authenticationMapper.toSignUpResponse(account);
     }
 }
