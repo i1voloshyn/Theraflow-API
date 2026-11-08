@@ -1,4 +1,4 @@
-package dev.ivanvoloshyn.theraflowapi.exception;
+package dev.ivanvoloshyn.theraflowapi.exception.model;
 
 import jakarta.annotation.Nullable;
 

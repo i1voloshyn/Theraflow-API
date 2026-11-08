@@ -20,4 +20,9 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+password:
+  length:
+    min: 10
+    max: 64
+
 

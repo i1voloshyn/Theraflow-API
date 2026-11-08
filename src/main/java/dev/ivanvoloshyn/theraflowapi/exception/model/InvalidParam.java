@@ -1,4 +1,4 @@
-package dev.ivanvoloshyn.theraflowapi.exception;
+package dev.ivanvoloshyn.theraflowapi.exception.model;
 
 public record InvalidParam(
         String name,

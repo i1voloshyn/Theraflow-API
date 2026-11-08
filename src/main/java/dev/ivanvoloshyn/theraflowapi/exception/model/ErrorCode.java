@@ -1,4 +1,4 @@
-package dev.ivanvoloshyn.theraflowapi.exception;
+package dev.ivanvoloshyn.theraflowapi.exception.model;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -11,11 +11,15 @@ public enum ErrorCode {
             "See logs for details"
     ),
 
+    PASSWORD_WEAK(
+            HttpStatus.BAD_REQUEST,
+            "Password weak",
+            "Password does not meet security requirements. Use at least 10 characters with uppercase, lowercase, numbers, and symbols"),
+
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "Email exists",
             "An account with provided email already exists"
-
     );
 
     private final HttpStatus httpStatus;
