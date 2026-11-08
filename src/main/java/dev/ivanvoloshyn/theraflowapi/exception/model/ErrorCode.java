@@ -8,8 +8,7 @@ public enum ErrorCode {
     THERAFLOW_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "Theraflow app error",
-            "See logs for details"
-    ),
+            "See logs for details"),
 
     PASSWORD_WEAK(
             HttpStatus.BAD_REQUEST,
@@ -19,8 +18,12 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "Email exists",
-            "An account with provided email already exists"
-    );
+            "An account with provided email already exists"),
+
+    VALIDATION_FAILED
+            (HttpStatus.BAD_REQUEST,
+                    "Validation failed",
+                    "One or more fields are invalid. See 'errors' for details");
 
     private final HttpStatus httpStatus;
     private final String title;

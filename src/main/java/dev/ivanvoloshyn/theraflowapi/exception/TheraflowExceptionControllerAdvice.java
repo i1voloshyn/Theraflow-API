@@ -8,6 +8,9 @@ import dev.ivanvoloshyn.theraflowapi.exception.model.InvalidParam;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -43,6 +46,22 @@ public class TheraflowExceptionControllerAdvice {
         return ResponseEntity
                 .badRequest()
                 .body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest req
+    ) {
+        var errors = ex.getBindingResult().getAllErrors()
+                .stream()
+                .map(error -> {
+                    String fieldName = ((FieldError) error).getField();
+                    String errorMessage = error.getDefaultMessage();
+                    return new InvalidParam(fieldName, errorMessage);
+                }).toList();
+        ErrorResponse response = errorResponse(req, ErrorCode.VALIDATION_FAILED, null, errors);
+        return ResponseEntity.badRequest().body(response);
     }
 
     private ErrorResponse errorResponse(HttpServletRequest req,
