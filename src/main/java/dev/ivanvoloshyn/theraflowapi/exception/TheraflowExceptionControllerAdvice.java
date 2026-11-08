@@ -73,7 +73,10 @@ public class TheraflowExceptionControllerAdvice {
         URI path = URI.create(req.getRequestURI());
         String errorMessage = message!=null ? message:code.getMessage();
 
-        return new ErrorResponse(code.getHttpStatus().value(), code, code.getTitle(), errorMessage, path, Instant.now(), params);
+        return new ErrorResponse(code.getHttpStatus().value(),
+                code, code.getTitle(),
+                errorMessage, path,
+                Instant.now(), params);
     }
 
 }
