@@ -16,10 +16,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Component
 public class PasswordValidator implements ConstraintValidator<Password, String> {
-    @Value("${password.length.min}")
+    @Value("${app.password.length.min}")
     private int passwordMinLength;
 
-    @Value("${password.length.max}")
+    @Value("${app.password.length.max}")
     private int passwordMaxLength;
 
     @Override
