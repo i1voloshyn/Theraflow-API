@@ -17,18 +17,10 @@ spring:
     hibernate:
       ddl-auto: validate
 
-  jackson:
-    default-property-inclusion: non_null
-
-password:
-  length:
-    min: 10
-    max: 64
-
   mail:
     host: smtp.gmail.com
     port: 587
-    username: i1voloshyn.ph@gmail.com
+    username: ivan1995voloshka@gmail.com
     password: ${MAIL_PASSWORD}
     properties:
       mail:
@@ -37,6 +29,14 @@ password:
           starttls:
             enable: true
     protocol: smtp
+
+  jackson:
+    default-property-inclusion: non_null
+
+password:
+  length:
+    min: 10
+    max: 64
 
 app:
   base-url: http://localhost:8080
@@ -47,5 +47,3 @@ app:
       email:
         secret: ${JWT_EMAIL_SECRET}
         expiration: 60m # 60 minutes
-
-

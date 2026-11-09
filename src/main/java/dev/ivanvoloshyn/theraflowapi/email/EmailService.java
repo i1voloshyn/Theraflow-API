@@ -11,8 +11,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class EmailService {
     private static final String ACCOUNT_VERIFICATION = "Account Verification";
     private static final String VERIFY_EMAIL_PATH = "/api/v1/auth/verify-email";
