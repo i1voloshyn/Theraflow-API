@@ -9,6 +9,7 @@ import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
+import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,7 @@ public class PasswordAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuthenticationMapper authenticationMapper;
+    private final EmailVerificationTokenProvider emailTokenProvider;
 
     @Transactional
     public SignUpResponse signUp(PasswordSignUpRequest request) {
@@ -45,7 +47,7 @@ public class PasswordAuthenticationService {
     }
 
     private void publishEmailVerificationEvent(AuthIdentity identity) {
-        String token = "jwt-token"; //todo
+        String token = emailTokenProvider.generateToken(identity.getEmail());
         applicationEventPublisher.publishEvent(new EmailVerificationRequest(
                 identity.getId(),
                 identity.getEmail(),
