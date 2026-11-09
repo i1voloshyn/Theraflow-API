@@ -10,6 +10,16 @@ public enum ErrorCode {
             "Theraflow app error",
             "See logs for details"),
 
+    TOKEN_EXPIRED(
+            HttpStatus.UNAUTHORIZED,
+            "Token expired",
+            "The provided tokens has expired. Please log in again or use a refresh tokens to obtain a new one"),
+
+    TOKEN_INVALID(
+            HttpStatus.UNAUTHORIZED,
+            "Token invalid",
+            "The provided tokens is invalid or malformed. Please log in again"),
+
     PASSWORD_WEAK(
             HttpStatus.BAD_REQUEST,
             "Password weak",

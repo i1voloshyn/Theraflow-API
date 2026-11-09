@@ -6,7 +6,6 @@ import lombok.Getter;
 public class TheraflowApiException extends RuntimeException {
     @Getter
     private final ErrorCode errorCode;
-
     @Getter
     private Throwable cause = null;
 
