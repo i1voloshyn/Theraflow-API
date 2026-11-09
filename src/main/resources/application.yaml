@@ -25,4 +25,21 @@ password:
     min: 10
     max: 64
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: i1voloshyn.ph@gmail.com
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    protocol: smtp
+
+app:
+  base-url: http://localhost:8080
+  mail-from: ${MAIL_FROM}
+
 
