@@ -36,13 +36,20 @@ public class PasswordAuthenticationService {
 
         String passwordHash = passwordEncoder.encode(request.password());
 
-        //for providerUserId maybe I can use email+accountId ?
-
         AuthIdentity authIdentity = new AuthIdentity(AuthProvider.PASSWORD, normalizedEmail, normalizedEmail, passwordHash);
         account.setAuthIdentity(authIdentity);
 
-        applicationEventPublisher.publishEvent(new EmailVerificationRequest()); //todo sending email is not yet implemented
+        publishEmailVerificationEvent(authIdentity);
 
         return authenticationMapper.toSignUpResponse(account);
+    }
+
+    private void publishEmailVerificationEvent(AuthIdentity identity) {
+        String token = "jwt-token"; //todo
+        applicationEventPublisher.publishEvent(new EmailVerificationRequest(
+                identity.getId(),
+                identity.getEmail(),
+                token
+        ));
     }
 }
