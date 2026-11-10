@@ -116,7 +116,7 @@ class PasswordAuthenticationServiceTest {
 
         assertThatExceptionOfType(PermissionException.class)
                 .isThrownBy(() -> authenticationService.verifyEmail(expiredVerificationToken))
-                .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_VERIFICATION_LINK_EXPIRED));
+                .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_VERIFICATION_LINK_INVALID));
     }
 
 }

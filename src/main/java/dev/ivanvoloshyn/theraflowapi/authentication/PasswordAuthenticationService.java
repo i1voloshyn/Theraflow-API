@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +60,12 @@ public class PasswordAuthenticationService {
 
     @Transactional
     public void verifyEmail(String token) {
-        String email = emailTokenProvider.extractEmail(token);
+        final String email;
+        try {
+            email = emailTokenProvider.extractEmail(token);
+        } catch (PermissionException e) {
+            throw new PermissionException(ErrorCode.EMAIL_VERIFICATION_LINK_INVALID, e);
+        }
 
         Account account = accountService.findByEmail(email);
 

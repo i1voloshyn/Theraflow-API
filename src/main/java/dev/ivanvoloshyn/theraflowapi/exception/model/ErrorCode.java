@@ -20,10 +20,10 @@ public enum ErrorCode {
             "Email already verified",
             "The email address has already been verified. Please log in."
     ),
-    EMAIL_VERIFICATION_LINK_EXPIRED(
-            HttpStatus.BAD_REQUEST,
-            "Email verification link expired",
-            "The email verification link has expired. Please request a new verification email"),
+    EMAIL_VERIFICATION_LINK_INVALID(
+            HttpStatus.UNAUTHORIZED,
+            "Email verification link invalid",
+            "The email verification link is broken or has expired. Please request a new verification email"),
 
     THERAFLOW_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
