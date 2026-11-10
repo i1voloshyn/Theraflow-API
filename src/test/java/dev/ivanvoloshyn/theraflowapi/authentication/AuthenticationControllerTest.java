@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
+import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.SIGN_UP_ENDPOINT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -28,8 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = AuthenticationController.class)
 @Import({SecurityConfiguration.class})
 class AuthenticationControllerTest {
-
-    private static final String SIGN_UP_ENDPOINT = "/api/v1/auth/password/sign-up";
 
     @MockitoBean
     private PasswordAuthenticationService passwordAuthenticationService;
