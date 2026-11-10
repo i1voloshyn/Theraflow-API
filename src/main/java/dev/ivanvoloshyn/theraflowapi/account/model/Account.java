@@ -46,7 +46,7 @@ public class Account {
     @Column(insertable = false, updatable = false)
     private Instant updatedAt;
 
-    @OneToOne(mappedBy = "account",cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "account",cascade = CascadeType.PERSIST,orphanRemoval = true)
     private AuthIdentity authIdentity;
 
     public Account() {
