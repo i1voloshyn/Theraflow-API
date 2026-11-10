@@ -12,8 +12,11 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.generator.EventType;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -27,6 +30,7 @@ public class AuthIdentity {
     private UUID id;
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private AuthProvider provider;
     @Column(nullable = false)
     private String providerUserId;
@@ -44,15 +48,17 @@ public class AuthIdentity {
     @OneToOne
     @JoinColumn(name = "account_id", referencedColumnName = "id")
     @MapsId
+    @Setter
     private Account account;
 
     public AuthIdentity() {
     }
 
-    public AuthIdentity(AuthProvider provider,
-                        String providerUserId,
-                        String email,
-                        @Nullable String passwordHash) {
+    public AuthIdentity(
+            AuthProvider provider,
+            String providerUserId,
+            String email,
+            @Nullable String passwordHash) {
         this.provider = provider;
         this.providerUserId = providerUserId;
         this.email = email;
