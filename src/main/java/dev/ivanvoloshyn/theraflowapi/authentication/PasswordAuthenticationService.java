@@ -1,12 +1,14 @@
 package dev.ivanvoloshyn.theraflowapi.authentication;
 
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
+import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
+import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
 import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
@@ -54,4 +56,18 @@ public class PasswordAuthenticationService {
                 token
         ));
     }
+
+    @Transactional
+    public void verifyEmail(String token) {
+        String email = emailTokenProvider.extractEmail(token);
+
+        Account account = accountService.findByEmail(email);
+
+        switch (account.getStatus()) {
+            case ACTIVE -> throw new PermissionException(ErrorCode.EMAIL_ALREADY_VERIFIED);
+            case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
+            case PENDING_VERIFICATION -> account.setStatus(AccountStatus.ACTIVE);
+        }
+    }
+
 }

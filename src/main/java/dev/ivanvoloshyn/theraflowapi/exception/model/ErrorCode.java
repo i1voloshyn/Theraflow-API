@@ -5,6 +5,22 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
+    ACCOUNT_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "Account not found",
+            "No account exists for the given identifier"),
+
+    ACCOUNT_DISABLED(
+            HttpStatus.FORBIDDEN,
+            "Account disabled",
+            "This account has been disabled. Please contact support."),
+
+    EMAIL_ALREADY_VERIFIED(
+            HttpStatus.CONFLICT,
+            "Email already verified",
+            "The email address has already been verified. Please log in."
+    ),
+
     THERAFLOW_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "Theraflow app error",
