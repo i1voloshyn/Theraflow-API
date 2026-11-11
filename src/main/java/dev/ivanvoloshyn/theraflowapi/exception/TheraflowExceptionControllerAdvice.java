@@ -7,9 +7,7 @@ import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorResponse;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ValidationError;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,7 +16,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 @RestControllerAdvice
@@ -36,7 +33,7 @@ public class TheraflowExceptionControllerAdvice {
             PasswordPolicyException ex,
             HttpServletRequest req) {
 
-        List<ValidationError> invalidParams = ex.getViolations()
+        List<ValidationError> errors = ex.getViolations()
                 .stream()
                 .map(violation -> new ValidationError(
                         "password",
@@ -44,7 +41,7 @@ public class TheraflowExceptionControllerAdvice {
                         violation.getMessageTemplate()
                 ))
                 .toList();
-        ErrorResponse error = errorResponse(req, ErrorCode.PASSWORD_WEAK, null, invalidParams);
+        ErrorResponse error = errorResponse(req, ErrorCode.PASSWORD_WEAK, null, errors);
 
         return ResponseEntity
                 .status(error.status())

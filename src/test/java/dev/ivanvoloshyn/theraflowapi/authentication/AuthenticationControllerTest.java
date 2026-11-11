@@ -84,7 +84,7 @@ class AuthenticationControllerTest {
                 .andReturn();
 
         ErrorResponse error = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
-        assertThat(error.errorCode().equals(ErrorCode.PASSWORD_WEAK));
+        assertThat(error.code().equals(ErrorCode.PASSWORD_WEAK));
 
         verifyNoInteractions(passwordAuthenticationService);
     }
@@ -99,12 +99,17 @@ class AuthenticationControllerTest {
     void signUp_error1() throws Exception {
         PasswordSignUpRequest request = SignUpTestBuilder.invalidEmailSignUpRequest();
 
-        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(SIGN_UP_ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_FAILED.name()));
+                .andReturn();
+
+        ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+        assertThat(errorResponse.code()).isEqualTo(ErrorCode.VALIDATION_FAILED);
+        assertThat(errorResponse.errors().getFirst().code()).isEqualTo(ErrorCode.EMAIL_INVALID.name());
 
         verifyNoInteractions(passwordAuthenticationService);
     }
