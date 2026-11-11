@@ -4,6 +4,7 @@ import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.config.SecurityConfiguration;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
+import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorResponse;
 import dev.ivanvoloshyn.theraflowapi.fixtures.SignUpTestBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,12 +76,15 @@ class AuthenticationControllerTest {
     void signUp_error() throws Exception {
         PasswordSignUpRequest request = SignUpTestBuilder.weakPasswordSignUpRequest();
 
-        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(SIGN_UP_ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.PASSWORD_WEAK.name()));
+                .andReturn();
+
+        ErrorResponse error = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+        assertThat(error.errorCode().equals(ErrorCode.PASSWORD_WEAK));
 
         verifyNoInteractions(passwordAuthenticationService);
     }
