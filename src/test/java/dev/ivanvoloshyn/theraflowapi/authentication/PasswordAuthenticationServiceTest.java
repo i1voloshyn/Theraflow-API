@@ -108,6 +108,28 @@ class PasswordAuthenticationServiceTest {
     }
 
     @DisplayName("""
+            verifyEmail
+            SHOULD change account state to ACTIVE
+            FOR unverifiedAccount
+            WITH valid verification link
+            """)
+    @Test
+    void verifyEmail() {
+        String verificationToken = "cc837471-3c4b-4d77-a825-c4c1cf3a1dc5";
+        Account account = AccountTestBuilder.therapistUnverifiedAccount();
+
+        when(emailVerificationTokenProvider.extractEmail(verificationToken)).thenReturn(DEFAULT_EMAIL);
+        when(accountService.findByEmail(DEFAULT_EMAIL)).thenReturn(account);
+
+        authenticationService.verifyEmail(verificationToken);
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+
+        verify(emailVerificationTokenProvider).extractEmail(verificationToken);
+        verify(accountService).findByEmail(DEFAULT_EMAIL);
+    }
+
+    @DisplayName("""
             Verified email with expired tokens
             Should thrown InvalidCredentialsException
             With EMAIL_VERIFICATION_LINK_EXPIRED error code
