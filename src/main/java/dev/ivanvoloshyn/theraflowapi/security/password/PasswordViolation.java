@@ -15,4 +15,5 @@ public enum PasswordViolation {
     PasswordViolation(String messageTemplate) {
         this.messageTemplate = messageTemplate;
     }
+
 }

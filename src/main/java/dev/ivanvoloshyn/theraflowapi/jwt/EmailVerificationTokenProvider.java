@@ -1,5 +1,6 @@
 package dev.ivanvoloshyn.theraflowapi.jwt;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,5 +24,9 @@ public class EmailVerificationTokenProvider {
                 .tokenBuilder(expiration, secret)
                 .subject(email)
                 .compact();
+    }
+
+    public String extractEmail(String token) {
+        return jwtProvider.extractClaim(token, secret, Claims::getSubject);
     }
 }

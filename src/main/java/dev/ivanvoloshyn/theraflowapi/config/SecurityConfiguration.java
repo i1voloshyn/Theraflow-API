@@ -16,7 +16,9 @@ import java.util.Set;
 @EnableWebSecurity
 public class SecurityConfiguration {
     private static final String[] PUBLIC_URLS = {
-            "/api/v1/auth/**"
+            "/api/v1/auth/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
     };
 
     @Bean

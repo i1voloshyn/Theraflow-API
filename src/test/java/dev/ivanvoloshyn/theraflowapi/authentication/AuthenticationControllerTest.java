@@ -4,6 +4,7 @@ import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.config.SecurityConfiguration;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
+import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorResponse;
 import dev.ivanvoloshyn.theraflowapi.fixtures.SignUpTestBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +18,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.SIGN_UP_ENDPOINT;
+import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.VERIFY_EMAIL_ENDPOINT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,12 +78,15 @@ class AuthenticationControllerTest {
     void signUp_error() throws Exception {
         PasswordSignUpRequest request = SignUpTestBuilder.weakPasswordSignUpRequest();
 
-        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(SIGN_UP_ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.PASSWORD_WEAK.name()));
+                .andReturn();
+
+        ErrorResponse error = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+        assertThat(error.code().equals(ErrorCode.PASSWORD_WEAK));
 
         verifyNoInteractions(passwordAuthenticationService);
     }
@@ -95,14 +101,36 @@ class AuthenticationControllerTest {
     void signUp_error1() throws Exception {
         PasswordSignUpRequest request = SignUpTestBuilder.invalidEmailSignUpRequest();
 
-        mockMvc.perform(post(SIGN_UP_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(SIGN_UP_ENDPOINT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_FAILED.name()));
+                .andReturn();
+
+        ErrorResponse errorResponse = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponse.class);
+
+        assertThat(errorResponse.code()).isEqualTo(ErrorCode.VALIDATION_FAILED);
+        assertThat(errorResponse.errors().getFirst().code()).isEqualTo(ErrorCode.EMAIL_INVALID.name());
 
         verifyNoInteractions(passwordAuthenticationService);
+    }
+
+    @DisplayName("""
+            verifyEmail
+            SHOULD return NO_CONTENT
+            FOR successful email verification
+            """)
+    @Test
+    void emailVerification_success() throws Exception {
+        String token = "valid-verification-access";
+        mockMvc.perform(get(VERIFY_EMAIL_ENDPOINT)
+                        .param("token", token)
+                )
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(passwordAuthenticationService).verifyEmail(token);
     }
 
 }

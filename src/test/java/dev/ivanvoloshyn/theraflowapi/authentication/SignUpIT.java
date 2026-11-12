@@ -95,8 +95,9 @@ public class SignUpIT {
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody(ErrorResponse.class)
                 .value(error -> {
-                    assertThat(error.statusCode()).isEqualTo(HttpStatus.CONFLICT.value());
-                    assertThat(error.errorCode()).isEqualTo(ErrorCode.EMAIL_ALREADY_EXISTS);
+                    assertThat(error.code()).isEqualTo(ErrorCode.EMAIL_ALREADY_EXISTS);
+                    assertThat(error.code().getHttpStatus()).isEqualTo(HttpStatus.CONFLICT);
+
                 });
 
         assertThat(accountRepository.count()).isOne();

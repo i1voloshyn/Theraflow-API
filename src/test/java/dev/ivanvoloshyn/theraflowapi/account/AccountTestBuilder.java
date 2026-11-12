@@ -9,4 +9,8 @@ public class AccountTestBuilder {
     public static Account therapistUnverifiedAccount() {
         return new Account(AccountType.THERAPIST, AccountStatus.PENDING_VERIFICATION);
     }
+
+    public static Account therapistVerifiedAccount() {
+        return new Account(AccountType.THERAPIST, AccountStatus.ACTIVE);
+    }
 }

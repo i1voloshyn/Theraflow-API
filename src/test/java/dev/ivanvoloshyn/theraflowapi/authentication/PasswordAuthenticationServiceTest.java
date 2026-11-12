@@ -8,6 +8,7 @@ import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
+import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
 import dev.ivanvoloshyn.theraflowapi.fixtures.SignUpTestBuilder;
@@ -20,11 +21,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
+import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.DEFAULT_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -98,6 +105,67 @@ class PasswordAuthenticationServiceTest {
 
         assertThat(actualResponse.id()).isEqualTo(expectedAccount.getId());
         assertThat(actualResponse.status()).isEqualTo(AccountStatus.PENDING_VERIFICATION);
+    }
+
+    @DisplayName("""
+            verifyEmail
+            SHOULD change account state to ACTIVE
+            FOR unverifiedAccount
+            WITH valid verification link
+            """)
+    @Test
+    void verifyEmail() {
+        String verificationToken = "cc837471-3c4b-4d77-a825-c4c1cf3a1dc5";
+        Account account = AccountTestBuilder.therapistUnverifiedAccount();
+
+        when(emailVerificationTokenProvider.extractEmail(verificationToken)).thenReturn(DEFAULT_EMAIL);
+        when(accountService.findByEmail(DEFAULT_EMAIL)).thenReturn(account);
+
+        authenticationService.verifyEmail(verificationToken);
+
+        assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+
+        verify(emailVerificationTokenProvider).extractEmail(verificationToken);
+        verify(accountService).findByEmail(DEFAULT_EMAIL);
+    }
+
+    @DisplayName("""
+            Verified email with expired tokens
+            Should thrown InvalidCredentialsException
+            With EMAIL_VERIFICATION_LINK_EXPIRED error code
+            """)
+    @Test
+    void verifyEmail_error1() {
+        String expiredVerificationToken = "cc837471-3c4b-4d77-a825-c4c1cf3a1dc5";
+
+        when(emailVerificationTokenProvider.extractEmail(expiredVerificationToken))
+                .thenThrow(new PermissionException(ErrorCode.TOKEN_EXPIRED));
+
+        assertThatExceptionOfType(PermissionException.class)
+                .isThrownBy(() -> authenticationService.verifyEmail(expiredVerificationToken))
+                .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_VERIFICATION_LINK_INVALID));
+    }
+
+    @DisplayName("""
+            verifyEmail
+            WITH already-used verification link
+            SHOULD throw ResourceConflictException
+            WITH code-EMAIL_ALREADY_VERIFIED
+            """)
+    @Test
+    void verifyEmail_error2() {
+        String verificationToken = "cc837471-3c4b-4d77-a825-c4c1cf3a1dc5";
+        Account verifiedAccount = AccountTestBuilder.therapistVerifiedAccount();
+
+        when(emailVerificationTokenProvider.extractEmail(verificationToken)).thenReturn(DEFAULT_EMAIL);
+        when(accountService.findByEmail(DEFAULT_EMAIL)).thenReturn(verifiedAccount);
+
+        assertThatExceptionOfType(ResourceConflictException.class)
+                .isThrownBy(() -> authenticationService.verifyEmail(verificationToken))
+                .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_ALREADY_VERIFIED));
+
+        verify(emailVerificationTokenProvider).extractEmail(verificationToken);
+        verify(accountService).findByEmail(DEFAULT_EMAIL);
     }
 
 }
