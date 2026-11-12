@@ -142,8 +142,8 @@ class PasswordAuthenticationServiceTest {
                 .isThrownBy(() -> authenticationService.verifyEmail(verificationToken))
                 .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_ALREADY_VERIFIED));
 
-        verify(emailVerificationTokenProvider.extractEmail(verificationToken));
-        verify(accountService.findByEmail(DEFAULT_EMAIL));
+        verify(emailVerificationTokenProvider).extractEmail(verificationToken);
+        verify(accountService).findByEmail(DEFAULT_EMAIL);
     }
 
 }
