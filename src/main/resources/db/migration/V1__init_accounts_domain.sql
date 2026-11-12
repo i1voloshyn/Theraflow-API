@@ -26,9 +26,10 @@ CREATE TABLE auth_identities
     updated_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_auth_identities_provider_user_id UNIQUE (provider, provider_user_id),
+    CONSTRAINT uq_provider_email UNIQUE (provider, email),
 
     CONSTRAINT pk_auth_identities PRIMARY KEY (account_id),
-    CONSTRAINT fk_auth_identities_accounts FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE ,
+    CONSTRAINT fk_auth_identities_accounts FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
 
     CONSTRAINT ck_accounts_email_normalized
         CHECK (email = lower(trim(email)) AND email <> ''),
@@ -40,4 +41,17 @@ CREATE TABLE auth_identities
                 OR
             (provider <> 'PASSWORD' AND password_hash IS NULL)
             )
+);
+
+CREATE TABLE password_reset_tokens
+(
+    id         UUID                              DEFAULT gen_random_uuid(),
+    account_id UUID                     NOT NULL,
+    token_hash TEXT                     NOT NULL UNIQUE,
+    used       BOOLEAN                  NOT NULL DEFAULT false,
+    expires_at TIMESTAMP                NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    constraint pk_password_reset_token PRIMARY KEY (id),
+    constraint fk_password_reset_token_account FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
 );

@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.account;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,8 @@ public class AccountService {
         return accountRepository.save(new Account(type, AccountStatus.PENDING_VERIFICATION));
     }
 
-    public Account findByEmail(String email) {
-        return accountRepository.findByEmail(email)
+    public Account findByEmail(String email, AuthProvider provider) {
+        return accountRepository.findByEmailAndProvider(email, provider)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 }

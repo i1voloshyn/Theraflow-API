@@ -7,11 +7,14 @@ import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
 import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
+import dev.ivanvoloshyn.theraflowapi.event.PasswordResetEventRequest;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
 import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
+import dev.ivanvoloshyn.theraflowapi.security.UUIDTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,17 +22,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
-import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
 public class PasswordAuthenticationService {
-    private final AuthIdentityRepository authIdentityRepository;
     private final AccountService accountService;
-    private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final AuthenticationMapper authenticationMapper;
+    private final AuthIdentityRepository authIdentityRepository;
     private final EmailVerificationTokenProvider emailTokenProvider;
+    private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final Supplier<UUID> uuidSupplier;
+    private final UUIDTokenProvider uuidTokenProvider;
+
 
     @Transactional
     public SignUpResponse signUp(PasswordSignUpRequest request) {
@@ -67,13 +75,28 @@ public class PasswordAuthenticationService {
             throw new PermissionException(ErrorCode.EMAIL_VERIFICATION_LINK_INVALID, e);
         }
 
-        Account account = accountService.findByEmail(email);
+        Account account = accountService.findByEmail(email, AuthProvider.PASSWORD);
 
         switch (account.getStatus()) {
             case ACTIVE -> throw new ResourceConflictException(ErrorCode.EMAIL_ALREADY_VERIFIED);
             case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
             case PENDING_VERIFICATION -> account.setStatus(AccountStatus.ACTIVE);
         }
+    }
+
+    @Transactional
+    public void requestPasswordReset(String email) {
+        Account account = accountService.findByEmail(email, AuthProvider.PASSWORD);
+
+        String rawResetToken = uuidSupplier.get().toString();
+        PasswordResetToken resetToken = uuidTokenProvider.buildPasswordResetToken(rawResetToken);
+
+        account.addPasswordResetToken(resetToken);
+
+        applicationEventPublisher.publishEvent(new PasswordResetEventRequest(
+                email,
+                rawResetToken
+        ));
     }
 
 }

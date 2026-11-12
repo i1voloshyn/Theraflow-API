@@ -119,14 +119,14 @@ class PasswordAuthenticationServiceTest {
         Account account = AccountTestBuilder.therapistUnverifiedAccount();
 
         when(emailVerificationTokenProvider.extractEmail(verificationToken)).thenReturn(DEFAULT_EMAIL);
-        when(accountService.findByEmail(DEFAULT_EMAIL)).thenReturn(account);
+        when(accountService.findByEmail(DEFAULT_EMAIL, AuthProvider.PASSWORD)).thenReturn(account);
 
         authenticationService.verifyEmail(verificationToken);
 
         assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
 
         verify(emailVerificationTokenProvider).extractEmail(verificationToken);
-        verify(accountService).findByEmail(DEFAULT_EMAIL);
+        verify(accountService).findByEmail(DEFAULT_EMAIL, AuthProvider.PASSWORD);
     }
 
     @DisplayName("""
@@ -158,14 +158,14 @@ class PasswordAuthenticationServiceTest {
         Account verifiedAccount = AccountTestBuilder.therapistVerifiedAccount();
 
         when(emailVerificationTokenProvider.extractEmail(verificationToken)).thenReturn(DEFAULT_EMAIL);
-        when(accountService.findByEmail(DEFAULT_EMAIL)).thenReturn(verifiedAccount);
+        when(accountService.findByEmail(DEFAULT_EMAIL, AuthProvider.PASSWORD)).thenReturn(verifiedAccount);
 
         assertThatExceptionOfType(ResourceConflictException.class)
                 .isThrownBy(() -> authenticationService.verifyEmail(verificationToken))
                 .matches(ex -> ex.getErrorCode().equals(ErrorCode.EMAIL_ALREADY_VERIFIED));
 
         verify(emailVerificationTokenProvider).extractEmail(verificationToken);
-        verify(accountService).findByEmail(DEFAULT_EMAIL);
+        verify(accountService).findByEmail(DEFAULT_EMAIL, AuthProvider.PASSWORD);
     }
 
 }
