@@ -70,7 +70,7 @@ public class PasswordAuthenticationService {
         Account account = accountService.findByEmail(email);
 
         switch (account.getStatus()) {
-            case ACTIVE -> throw new PermissionException(ErrorCode.EMAIL_ALREADY_VERIFIED);
+            case ACTIVE -> throw new ResourceConflictException(ErrorCode.EMAIL_ALREADY_VERIFIED);
             case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
             case PENDING_VERIFICATION -> account.setStatus(AccountStatus.ACTIVE);
         }
