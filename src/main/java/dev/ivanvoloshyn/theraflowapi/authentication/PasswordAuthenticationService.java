@@ -4,11 +4,14 @@ import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.ConfirmPasswordResetRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.JwtPair;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignInRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.RefreshToken;
 import dev.ivanvoloshyn.theraflowapi.event.model.EmailVerificationRequest;
 import dev.ivanvoloshyn.theraflowapi.event.model.PasswordResetRequestEvent;
 import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
@@ -17,9 +20,17 @@ import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictExcept
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.TheraflowApiException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
+import dev.ivanvoloshyn.theraflowapi.jwt.JwtAuthTokenProvider;
 import dev.ivanvoloshyn.theraflowapi.security.UUIDTokenProvider;
+import dev.ivanvoloshyn.theraflowapi.security.model.TheraflowUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +55,63 @@ public class PasswordAuthenticationService {
     private final Supplier<UUID> uuidSupplier;
     private final UUIDTokenProvider uuidTokenProvider;
     private final Clock clock;
+    private final AuthenticationManager authenticationManager;
+    private final JwtAuthTokenProvider jwtAuthTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    @Transactional
+    public JwtPair signIn(PasswordSignInRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
+        final Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(normalizedEmail, request.password()));
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
+            throw new PermissionException(ErrorCode.AUTHENTICATION_FAILED, e);
+        }
+
+        if (!(authentication.getPrincipal() instanceof TheraflowUser user)) {
+            throw new AuthenticationServiceException("Unexpected authentication principal type");
+        }
+
+        Account account = accountService.findById(user.getAccountId());
+        validateAccountStatus(account);
+        return issueTokens(account);
+    }
+
+    @Transactional
+    public JwtPair rotateTokens(String rawRefreshToken) {
+        String tokenHash = uuidTokenProvider.hashToken(rawRefreshToken);
+        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new PermissionException(ErrorCode.REFRESH_TOKEN_INVALID));
+
+        if (refreshToken.isRevoked() || !refreshToken.getExpiresAt().isAfter(clock.instant())) {
+            throw new PermissionException(ErrorCode.REFRESH_TOKEN_INVALID);
+        }
+
+        Account account = refreshToken.getAccount();
+        validateAccountStatus(account);
+        JwtPair tokens = issueTokens(account);
+        refreshToken.setRevoked(true);
+        return tokens;
+    }
+
+    private void validateAccountStatus(Account account) {
+        switch (account.getStatus()) {
+            case PENDING_VERIFICATION -> throw new PermissionException(ErrorCode.EMAIL_NOT_VERIFIED);
+            case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
+            case ACTIVE -> { }
+        }
+    }
+
+    private JwtPair issueTokens(Account account) {
+        TheraflowUser user = new TheraflowUser(account.getId(), account.getAuthIdentity().getEmail(),
+                null, account.getType(), account.getStatus());
+        String accessToken = jwtAuthTokenProvider.generateAccessToken(user);
+        String rawRefreshToken = uuidSupplier.get().toString();
+        account.addRefreshToken(uuidTokenProvider.buildRefreshToken(rawRefreshToken));
+        return new JwtPair(accessToken, rawRefreshToken);
+    }
 
     @Transactional
     public SignUpResponse signUp(PasswordSignUpRequest request) {
