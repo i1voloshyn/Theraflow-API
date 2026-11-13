@@ -3,16 +3,16 @@ package dev.ivanvoloshyn.theraflowapi.authentication;
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
-import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
-import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
-import dev.ivanvoloshyn.theraflowapi.event.PasswordResetEventRequest;
+import dev.ivanvoloshyn.theraflowapi.event.model.EmailVerificationRequest;
+import dev.ivanvoloshyn.theraflowapi.event.model.PasswordResetRequestEvent;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
-import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
+import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
 import dev.ivanvoloshyn.theraflowapi.security.UUIDTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -93,7 +93,7 @@ public class PasswordAuthenticationService {
 
         account.addPasswordResetToken(resetToken);
 
-        applicationEventPublisher.publishEvent(new PasswordResetEventRequest(
+        applicationEventPublisher.publishEvent(new PasswordResetRequestEvent(
                 email,
                 rawResetToken
         ));

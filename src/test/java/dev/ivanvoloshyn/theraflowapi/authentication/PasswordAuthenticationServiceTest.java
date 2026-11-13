@@ -7,7 +7,7 @@ import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
-import dev.ivanvoloshyn.theraflowapi.event.EmailVerificationRequest;
+import dev.ivanvoloshyn.theraflowapi.event.model.EmailVerificationRequest;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
@@ -21,17 +21,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.verification.VerificationMode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.DEFAULT_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;

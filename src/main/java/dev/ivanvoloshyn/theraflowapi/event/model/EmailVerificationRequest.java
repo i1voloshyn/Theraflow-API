@@ -1,4 +1,4 @@
-package dev.ivanvoloshyn.theraflowapi.event;
+package dev.ivanvoloshyn.theraflowapi.event.model;
 
 import java.util.UUID;
 
