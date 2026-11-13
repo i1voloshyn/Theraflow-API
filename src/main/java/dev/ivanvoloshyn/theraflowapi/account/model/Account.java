@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.account.model;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -21,6 +23,8 @@ import org.hibernate.generator.EventType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -46,8 +50,11 @@ public class Account {
     @Column(insertable = false, updatable = false)
     private Instant updatedAt;
 
-    @OneToOne(mappedBy = "account",cascade = CascadeType.PERSIST,orphanRemoval = true)
+    @OneToOne(mappedBy = "account", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private AuthIdentity authIdentity;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    private Set<PasswordResetToken> passwordResetTokens = new HashSet<>();
 
     public Account() {
     }
@@ -60,6 +67,11 @@ public class Account {
     public void setAuthIdentity(AuthIdentity identity) {
         authIdentity = identity;
         identity.setAccount(this);
+    }
+
+    public void addPasswordResetToken(PasswordResetToken token) {
+        passwordResetTokens.add(token);
+        token.setAccount(this);
     }
 
 }

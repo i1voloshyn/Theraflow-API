@@ -80,6 +80,7 @@ public class TheraflowExceptionControllerAdvice {
         return switch (fieldError) {
             case "Email" -> ErrorCode.EMAIL_INVALID;
             case "NotBlank" -> ErrorCode.REQUIRED_FIELD;
+            case "ConfirmPassword" -> ErrorCode.PASSWORD_NOT_MATCH;
             default -> ErrorCode.THERAFLOW_ERROR;
         };
     }
