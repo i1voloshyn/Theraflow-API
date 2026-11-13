@@ -38,6 +38,8 @@ import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.RANDOM_UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -188,15 +190,13 @@ class PasswordAuthenticationServiceTest {
             WHEN the email does not exist in the database
             """)
     @Test
-    public void requestPasswordReset_error() {
+    void requestPasswordReset_error() {
         String nonExistentEmail = "wrong-email";
 
         when(accountService
-                .findByEmailAndProvider(nonExistentEmail, AuthProvider.PASSWORD))
-                .thenThrow(EntityNotFoundException.class);
+                .findByEmailAndProvider(nonExistentEmail, AuthProvider.PASSWORD)).thenThrow(EntityNotFoundException.class);
 
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> authenticationService.requestPasswordReset(nonExistentEmail));
+        authenticationService.requestPasswordReset(nonExistentEmail);
 
         verifyNoInteractions(uuidSupplier, uuidTokenProvider, applicationEventPublisher);
     }
@@ -208,7 +208,7 @@ class PasswordAuthenticationServiceTest {
             WHEN an account exists for the provided email
             """)
     @Test
-    public void requestPasswordReset_success() {
+    void requestPasswordReset_success() {
         Account account = AccountTestBuilder.therapistVerifiedAccount();
         String email = DEFAULT_EMAIL;
         String rawResetToken = RANDOM_UUID.toString();
@@ -230,5 +230,6 @@ class PasswordAuthenticationServiceTest {
                 .containsExactly(resetToken);
 
     }
+
 
 }

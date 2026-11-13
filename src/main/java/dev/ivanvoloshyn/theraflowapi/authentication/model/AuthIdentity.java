@@ -37,6 +37,7 @@ public class AuthIdentity {
     @Column(nullable = false)
     private String email;
     @Nullable
+    @Setter
     private String passwordHash;
     @Generated(event = EventType.INSERT)
     @Column(insertable = false)

@@ -49,13 +49,20 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST,
             "Password does not meet security requirements. Use at least 10 characters with uppercase, lowercase, numbers, and symbols"),
 
+    PASSWORD_NOT_MATCH(
+            HttpStatus.BAD_REQUEST,
+            "Passwords do not match"),
+
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "An account with provided email already exists"),
 
     VALIDATION_FAILED(
             HttpStatus.BAD_REQUEST,
-            "One or more fields are invalid. See 'errors' for details");
+            "One or more fields are invalid. See 'errors' for details"),
+    PASSWORD_RESET_TOKEN_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "The password reset link is invalid or has expired. Please request a new password reset link.");
 
     private final HttpStatus httpStatus;
     private final String message;

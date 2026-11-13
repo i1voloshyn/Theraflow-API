@@ -1,5 +1,6 @@
 package dev.ivanvoloshyn.theraflowapi.authentication;
 
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.ConfirmPasswordResetRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordResetRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
@@ -42,5 +43,21 @@ public class AuthenticationController {
     ) {
         passwordAuthenticationService.requestPasswordReset(request.email());
         return ResponseEntity.ok().body("If the email is registered, you'll get a reset link");
+    }
+
+    @GetMapping("/password-reset")
+    public ResponseEntity<Void> validatePasswordResetLink(
+            @RequestParam("token") String token
+    ) {
+        passwordAuthenticationService.validatePasswordResetLink(token);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<String> confirmPasswordReset(
+            @Valid @RequestBody ConfirmPasswordResetRequest request
+    ) {
+        passwordAuthenticationService.confirmPasswordReset(request);
+        return ResponseEntity.ok().body("Password reset successful");
     }
 }

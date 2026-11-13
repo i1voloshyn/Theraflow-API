@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.authentication;
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.ConfirmPasswordResetRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
@@ -10,8 +11,10 @@ import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
 import dev.ivanvoloshyn.theraflowapi.event.model.EmailVerificationRequest;
 import dev.ivanvoloshyn.theraflowapi.event.model.PasswordResetRequestEvent;
+import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
+import dev.ivanvoloshyn.theraflowapi.exception.exceptions.TheraflowApiException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.jwt.EmailVerificationTokenProvider;
 import dev.ivanvoloshyn.theraflowapi.security.UUIDTokenProvider;
@@ -21,12 +24,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PasswordAuthenticationService {
     private final AccountService accountService;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -37,7 +42,7 @@ public class PasswordAuthenticationService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final Supplier<UUID> uuidSupplier;
     private final UUIDTokenProvider uuidTokenProvider;
-
+    private final Clock clock;
 
     @Transactional
     public SignUpResponse signUp(PasswordSignUpRequest request) {
@@ -86,7 +91,15 @@ public class PasswordAuthenticationService {
 
     @Transactional
     public void requestPasswordReset(String email) {
-        Account account = accountService.findByEmailAndProvider(email, AuthProvider.PASSWORD);
+        final Account account;
+        try {
+            account = accountService.findByEmailAndProvider(email, AuthProvider.PASSWORD);
+            if (!account.getStatus().equals(AccountStatus.ACTIVE)) {
+                return;
+            }
+        } catch (EntityNotFoundException e) {
+            return;
+        }
 
         String rawResetToken = uuidSupplier.get().toString();
         PasswordResetToken resetToken = uuidTokenProvider.buildPasswordResetToken(rawResetToken);
@@ -97,6 +110,33 @@ public class PasswordAuthenticationService {
                 email,
                 rawResetToken
         ));
+    }
+
+    public void validatePasswordResetLink(String rawToken) {
+        PasswordResetToken resetToken = findValidPasswordResetToken(rawToken);
+        validateToken(resetToken);
+    }
+
+    @Transactional
+    public void confirmPasswordReset(ConfirmPasswordResetRequest request) {
+        PasswordResetToken resetToken = findValidPasswordResetToken(request.token());
+        Account account = resetToken.getAccount();
+
+        account.getAuthIdentity().setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        resetToken.setUsed(true);
+    }
+
+    private PasswordResetToken findValidPasswordResetToken(String rawToken) {
+        String tokenHash = uuidTokenProvider.hashToken(rawToken);
+
+        return passwordResetTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new TheraflowApiException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID));
+    }
+
+    private void validateToken(PasswordResetToken resetToken) {
+        if (resetToken.isUsed() || resetToken.getExpiresAt().isBefore(clock.instant())) {
+            throw new PermissionException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID);
+        }
     }
 
 }
