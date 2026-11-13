@@ -39,6 +39,7 @@ public class PasswordAuthenticationService {
     private final AuthIdentityRepository authIdentityRepository;
     private final EmailVerificationTokenProvider emailTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    // maybe in future it can be replaced with service but for now just leave it
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final Supplier<UUID> uuidSupplier;
     private final UUIDTokenProvider uuidTokenProvider;

@@ -6,6 +6,8 @@ public class Constants {
 
     public static final String SIGN_UP_ENDPOINT = "/api/v1/auth/password/sign-up";
     public static final String VERIFY_EMAIL_ENDPOINT = "/api/v1/auth/verify-email";
+    public static final String PASSWORD_RESET_ENDPOINT = "/api/v1/auth/password-reset";
+    public static final String CONFIRM_PASSWORD_RESET_ENDPOINT = "/api/v1/auth/password-reset/confirm";
 
     public final static String DEFAULT_EMAIL = "test@gmail.com";
     public final static String CORRECT_PASSWORD = "1123!Password";
@@ -14,5 +16,4 @@ public class Constants {
     public static final UUID ACCOUNT_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
     public static final UUID RANDOM_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 }
-
 
