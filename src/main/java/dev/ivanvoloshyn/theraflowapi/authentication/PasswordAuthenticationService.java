@@ -62,6 +62,10 @@ public class PasswordAuthenticationService {
     @Transactional
     public JwtPair signIn(PasswordSignInRequest request) {
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
+        Account account = authIdentityRepository
+                .findAccountIdByProviderAndProviderUserId(AuthProvider.PASSWORD, normalizedEmail)
+                .map(id -> lockAccount(id, ErrorCode.AUTHENTICATION_FAILED))
+                .orElse(null);
         final Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
@@ -74,7 +78,9 @@ public class PasswordAuthenticationService {
             throw new AuthenticationServiceException("Unexpected authentication principal type");
         }
 
-        Account account = accountService.findById(user.getAccountId());
+        if (account == null || !account.getId().equals(user.getAccountId())) {
+            throw new PermissionException(ErrorCode.AUTHENTICATION_FAILED);
+        }
         validateAccountStatus(account);
         return issueTokens(account);
     }
@@ -82,6 +88,9 @@ public class PasswordAuthenticationService {
     @Transactional
     public JwtPair rotateTokens(String rawRefreshToken) {
         String tokenHash = uuidTokenProvider.hashToken(rawRefreshToken);
+        UUID accountId = refreshTokenRepository.findAccountIdByTokenHash(tokenHash)
+                .orElseThrow(() -> new PermissionException(ErrorCode.REFRESH_TOKEN_INVALID));
+        Account account = lockAccount(accountId, ErrorCode.REFRESH_TOKEN_INVALID);
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new PermissionException(ErrorCode.REFRESH_TOKEN_INVALID));
 
@@ -89,11 +98,19 @@ public class PasswordAuthenticationService {
             throw new PermissionException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 
-        Account account = refreshToken.getAccount();
         validateAccountStatus(account);
         JwtPair tokens = issueTokens(account);
         refreshToken.setRevoked(true);
         return tokens;
+    }
+
+    private Account lockAccount(UUID accountId, ErrorCode notFoundCode) {
+        // Lock the account before token rows so resets, sign-in and rotation use one lock order.
+        try {
+            return accountService.findByIdForUpdate(accountId);
+        } catch (EntityNotFoundException e) {
+            throw new PermissionException(notFoundCode, e);
+        }
     }
 
     private void validateAccountStatus(Account account) {
@@ -182,21 +199,23 @@ public class PasswordAuthenticationService {
     }
 
     public void validatePasswordResetLink(String rawToken) {
-        findValidPasswordResetToken(rawToken);
+        findValidPasswordResetToken(uuidTokenProvider.hashToken(rawToken));
     }
 
     @Transactional
     public void confirmPasswordReset(ConfirmPasswordResetRequest request) {
-        PasswordResetToken resetToken = findValidPasswordResetToken(request.token());
-        Account account = resetToken.getAccount();
+        String tokenHash = uuidTokenProvider.hashToken(request.token());
+        UUID accountId = passwordResetTokenRepository.findAccountIdByTokenHash(tokenHash)
+                .orElseThrow(() -> new PermissionException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID));
+        Account account = lockAccount(accountId, ErrorCode.PASSWORD_RESET_TOKEN_INVALID);
+        PasswordResetToken resetToken = findValidPasswordResetToken(tokenHash);
 
         account.getAuthIdentity().setPasswordHash(passwordEncoder.encode(request.newPassword()));
         resetToken.setUsed(true);
+        account.getRefreshTokens().forEach(token -> token.setRevoked(true));
     }
 
-    private PasswordResetToken findValidPasswordResetToken(String rawToken) {
-        String tokenHash = uuidTokenProvider.hashToken(rawToken);
-
+    private PasswordResetToken findValidPasswordResetToken(String tokenHash) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new TheraflowApiException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID));
 

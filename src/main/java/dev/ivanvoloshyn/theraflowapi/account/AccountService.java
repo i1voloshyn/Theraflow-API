@@ -25,6 +25,11 @@ public class AccountService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
 
+    public Account findByIdForUpdate(UUID id) {
+        return accountRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
+    }
+
     public Account findByEmailAndProvider(String email, AuthProvider provider) {
         return accountRepository.findByEmailAndProvider(email, provider)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
