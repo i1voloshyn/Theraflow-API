@@ -1,6 +1,7 @@
 package dev.ivanvoloshyn.theraflowapi.security;
 
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.codec.Hex;
@@ -19,6 +20,13 @@ public class UUIDTokenProvider {
 
     @Value("${app.password.reset.expiration}")
     private Duration passwordResetTokenExpiration;
+
+    @Value("${app.security.jwt.refresh.expiration}")
+    private Duration refreshTokenExpiration;
+
+    public RefreshToken buildRefreshToken(String rawToken) {
+        return new RefreshToken(hashToken(rawToken), getExpiration(refreshTokenExpiration));
+    }
 
     public PasswordResetToken buildPasswordResetToken(String rawToken) {
         String tokenHash = hashToken(rawToken);
