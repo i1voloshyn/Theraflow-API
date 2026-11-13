@@ -32,11 +32,11 @@ public class EmailVerificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendPasswordResetEmailRequest(PasswordResetRequestEvent request) {
         try {
-            emailService.sendVerificationEmail(request.email(), request.token());
+            emailService.sendPasswordResetEmail(request.email(), request.token());
         } catch (EmailDeliveryException e) {
             log.error(
-                    "Verification email delivery failed for account {}",
-                  //  request.accountId(),
+                    "Verification email delivery failed for account with email {}",
+                    request.email(),
                     e
             );
         }
