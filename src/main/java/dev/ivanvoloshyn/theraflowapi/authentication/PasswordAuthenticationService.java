@@ -113,8 +113,7 @@ public class PasswordAuthenticationService {
     }
 
     public void validatePasswordResetLink(String rawToken) {
-        PasswordResetToken resetToken = findValidPasswordResetToken(rawToken);
-        validateToken(resetToken);
+        findValidPasswordResetToken(rawToken);
     }
 
     @Transactional
@@ -129,12 +128,15 @@ public class PasswordAuthenticationService {
     private PasswordResetToken findValidPasswordResetToken(String rawToken) {
         String tokenHash = uuidTokenProvider.hashToken(rawToken);
 
-        return passwordResetTokenRepository.findByTokenHash(tokenHash)
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new TheraflowApiException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID));
+
+        validateToken(resetToken);
+        return resetToken;
     }
 
     private void validateToken(PasswordResetToken resetToken) {
-        if (resetToken.isUsed() || resetToken.getExpiresAt().isBefore(clock.instant())) {
+        if (resetToken.isUsed() || !resetToken.getExpiresAt().isAfter(clock.instant())) {
             throw new PermissionException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID);
         }
     }
