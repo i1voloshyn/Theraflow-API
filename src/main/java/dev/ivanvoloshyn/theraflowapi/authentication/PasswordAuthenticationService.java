@@ -75,7 +75,7 @@ public class PasswordAuthenticationService {
             throw new PermissionException(ErrorCode.EMAIL_VERIFICATION_LINK_INVALID, e);
         }
 
-        Account account = accountService.findByEmail(email, AuthProvider.PASSWORD);
+        Account account = accountService.findByEmailAndProvider(email, AuthProvider.PASSWORD);
 
         switch (account.getStatus()) {
             case ACTIVE -> throw new ResourceConflictException(ErrorCode.EMAIL_ALREADY_VERIFIED);
@@ -86,7 +86,7 @@ public class PasswordAuthenticationService {
 
     @Transactional
     public void requestPasswordReset(String email) {
-        Account account = accountService.findByEmail(email, AuthProvider.PASSWORD);
+        Account account = accountService.findByEmailAndProvider(email, AuthProvider.PASSWORD);
 
         String rawResetToken = uuidSupplier.get().toString();
         PasswordResetToken resetToken = uuidTokenProvider.buildPasswordResetToken(rawResetToken);

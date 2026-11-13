@@ -18,7 +18,7 @@ public class AccountService {
         return accountRepository.save(new Account(type, AccountStatus.PENDING_VERIFICATION));
     }
 
-    public Account findByEmail(String email, AuthProvider provider) {
+    public Account findByEmailAndProvider(String email, AuthProvider provider) {
         return accountRepository.findByEmailAndProvider(email, provider)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
     }
