@@ -42,12 +42,19 @@ public class JwtProvider {
 
     public Claims extractAllClaims(String token, String secret) {
         try {
-            return Jwts.parser()
+            Instant now = clock.instant();
+            Claims claims = Jwts.parser()
                     .verifyWith((SecretKey) getSignInKey(secret))
-                    .clock(() -> Date.from(clock.instant()))
+                    .clock(() -> Date.from(now))
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
+            Date expiration = claims.getExpiration();
+            // RFC 7519 requires the current time to be strictly before exp.
+            if (expiration != null && !expiration.toInstant().isAfter(now)) {
+                throw new PermissionException(ErrorCode.TOKEN_EXPIRED);
+            }
+            return claims;
         } catch (ExpiredJwtException e) {
             log.debug("Token signature is valid, but the access has expired.", e);
             throw new PermissionException(ErrorCode.TOKEN_EXPIRED, e);
