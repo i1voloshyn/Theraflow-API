@@ -1,9 +1,12 @@
 package dev.ivanvoloshyn.theraflowapi.authentication;
 
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.ConfirmPasswordResetRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.JwtPair;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordResetRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignInRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
+import dev.ivanvoloshyn.theraflowapi.authentication.dto.TokenRotateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,20 @@ public class AuthenticationController {
             @Valid @RequestBody PasswordSignUpRequest request) {
         SignUpResponse response = passwordAuthenticationService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/password/sign-in")
+    public ResponseEntity<JwtPair> passwordSignIn(
+            @Valid @RequestBody PasswordSignInRequest request) {
+        JwtPair response = passwordAuthenticationService.signIn(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtPair> rotateTokens(
+            @Valid @RequestBody TokenRotateRequest request) {
+        JwtPair response = passwordAuthenticationService.rotateTokens(request.refreshToken());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/verify-email")

@@ -4,6 +4,7 @@ import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthIdentity;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.RefreshToken;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,9 @@ public class Account {
     @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     private Set<PasswordResetToken> passwordResetTokens = new HashSet<>();
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    private Set<RefreshToken> refreshTokens = new HashSet<>();
+
     public Account() {
     }
 
@@ -71,6 +75,11 @@ public class Account {
 
     public void addPasswordResetToken(PasswordResetToken token) {
         passwordResetTokens.add(token);
+        token.setAccount(this);
+    }
+
+    public void addRefreshToken(RefreshToken token) {
+        refreshTokens.add(token);
         token.setAccount(this);
     }
 

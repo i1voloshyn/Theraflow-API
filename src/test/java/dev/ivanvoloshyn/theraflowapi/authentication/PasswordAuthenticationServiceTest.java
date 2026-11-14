@@ -9,6 +9,7 @@ import dev.ivanvoloshyn.theraflowapi.authentication.dto.PasswordSignUpRequest;
 import dev.ivanvoloshyn.theraflowapi.authentication.dto.SignUpResponse;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.AuthProvider;
 import dev.ivanvoloshyn.theraflowapi.authentication.model.PasswordResetToken;
+import dev.ivanvoloshyn.theraflowapi.authentication.model.RefreshToken;
 import dev.ivanvoloshyn.theraflowapi.event.model.EmailVerificationRequest;
 import dev.ivanvoloshyn.theraflowapi.event.model.PasswordResetRequestEvent;
 import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
@@ -29,6 +30,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -37,11 +39,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.ACCOUNT_ID;
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.CORRECT_PASSWORD;
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.DEFAULT_EMAIL;
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.RANDOM_UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -282,6 +286,7 @@ class PasswordAuthenticationServiceTest {
             confirmPasswordReset
             SHOULD update the password hash
             AND mark the token as used
+            AND revoke existing refresh sessions
             WHEN token is valid and unused
             """)
     @Test
@@ -296,16 +301,23 @@ class PasswordAuthenticationServiceTest {
         PasswordResetToken resetToken = new PasswordResetToken(tokenHash,
                 clock.instant().plusSeconds(3600));
         account.addPasswordResetToken(resetToken);
+        RefreshToken refreshToken = new RefreshToken("refresh-token-hash", clock.instant().plusSeconds(3600));
+        account.addRefreshToken(refreshToken);
 
         when(uuidTokenProvider.hashToken(rawResetToken)).thenReturn(tokenHash);
-        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(resetToken));
+        mockLockedPasswordResetTokenLookup(resetToken);
         when(passwordEncoder.encode(request.newPassword())).thenReturn(newPasswordHash);
 
         authenticationService.confirmPasswordReset(request);
 
         assertThat(account.getAuthIdentity().getPasswordHash()).isEqualTo(newPasswordHash);
         assertThat(resetToken.isUsed()).isTrue();
+        assertThat(refreshToken.isRevoked()).isTrue();
         verify(passwordEncoder).encode(request.newPassword());
+        var order = inOrder(accountService, passwordResetTokenRepository);
+        order.verify(passwordResetTokenRepository).findAccountIdByTokenHash(tokenHash);
+        order.verify(accountService).findByIdForUpdate(ACCOUNT_ID);
+        order.verify(passwordResetTokenRepository).findByTokenHash(tokenHash);
     }
 
     @DisplayName("""
@@ -326,9 +338,11 @@ class PasswordAuthenticationServiceTest {
         PasswordResetToken expiredToken = new PasswordResetToken(tokenHash,
                 clock.instant().minusSeconds(1));
         account.addPasswordResetToken(expiredToken);
+        RefreshToken refreshToken = new RefreshToken("refresh-token-hash", clock.instant().plusSeconds(3600));
+        account.addRefreshToken(refreshToken);
 
         when(uuidTokenProvider.hashToken(rawResetToken)).thenReturn(tokenHash);
-        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
+        mockLockedPasswordResetTokenLookup(expiredToken);
 
         assertThatExceptionOfType(TheraflowApiException.class)
                 .isThrownBy(() -> authenticationService.confirmPasswordReset(request))
@@ -336,6 +350,7 @@ class PasswordAuthenticationServiceTest {
 
         assertThat(account.getAuthIdentity().getPasswordHash()).isEqualTo(originalPasswordHash);
         assertThat(expiredToken.isUsed()).isFalse();
+        assertThat(refreshToken.isRevoked()).isFalse();
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -360,7 +375,7 @@ class PasswordAuthenticationServiceTest {
         account.addPasswordResetToken(usedToken);
 
         when(uuidTokenProvider.hashToken(rawResetToken)).thenReturn(tokenHash);
-        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(usedToken));
+        mockLockedPasswordResetTokenLookup(usedToken);
 
         assertThatExceptionOfType(TheraflowApiException.class)
                 .isThrownBy(() -> authenticationService.confirmPasswordReset(request))
@@ -385,7 +400,7 @@ class PasswordAuthenticationServiceTest {
                 rawResetToken, CORRECT_PASSWORD, CORRECT_PASSWORD);
 
         when(uuidTokenProvider.hashToken(rawResetToken)).thenReturn(tokenHash);
-        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.empty());
+        when(passwordResetTokenRepository.findAccountIdByTokenHash(tokenHash)).thenReturn(Optional.empty());
 
         assertThatExceptionOfType(TheraflowApiException.class)
                 .isThrownBy(() -> authenticationService.confirmPasswordReset(request))
@@ -413,7 +428,7 @@ class PasswordAuthenticationServiceTest {
         account.addPasswordResetToken(expiredToken);
 
         when(uuidTokenProvider.hashToken(rawResetToken)).thenReturn(tokenHash);
-        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
+        mockLockedPasswordResetTokenLookup(expiredToken);
 
         assertThatExceptionOfType(TheraflowApiException.class)
                 .isThrownBy(() -> authenticationService.confirmPasswordReset(request))
@@ -424,4 +439,12 @@ class PasswordAuthenticationServiceTest {
         verifyNoInteractions(passwordEncoder);
     }
 
+    private void mockLockedPasswordResetTokenLookup(PasswordResetToken token) {
+        Account account = token.getAccount();
+        ReflectionTestUtils.setField(account, "id", ACCOUNT_ID);
+        when(passwordResetTokenRepository.findAccountIdByTokenHash(token.getTokenHash()))
+                .thenReturn(Optional.of(ACCOUNT_ID));
+        when(accountService.findByIdForUpdate(ACCOUNT_ID)).thenReturn(account);
+        when(passwordResetTokenRepository.findByTokenHash(token.getTokenHash())).thenReturn(Optional.of(token));
+    }
 }

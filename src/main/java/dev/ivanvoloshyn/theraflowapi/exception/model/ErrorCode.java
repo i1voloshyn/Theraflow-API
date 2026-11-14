@@ -7,6 +7,26 @@ import java.io.Serializable;
 
 @Getter
 public enum ErrorCode {
+    AUTHENTICATION_FAILED(
+            HttpStatus.UNAUTHORIZED,
+            "Invalid email or password"),
+
+    AUTHENTICATION_REQUIRED(
+            HttpStatus.UNAUTHORIZED,
+            "Authentication is required"),
+
+    ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "You do not have permission to access this resource"),
+
+    EMAIL_NOT_VERIFIED(
+            HttpStatus.UNAUTHORIZED,
+            "Please verify your email before signing in"),
+
+    REFRESH_TOKEN_INVALID(
+            HttpStatus.UNAUTHORIZED,
+            "The refresh token is invalid, expired, or has already been used"),
+
     ACCOUNT_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "No account exists for the given identifier"),
