@@ -62,6 +62,8 @@ public class PasswordAuthenticationService {
     @Transactional
     public JwtPair signIn(PasswordSignInRequest request) {
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
+        // Serialize password verification and token issuance with password reset.
+        // Locking after authentication could create a new session using the old password.
         Account account = authIdentityRepository
                 .findAccountIdByProviderAndProviderUserId(AuthProvider.PASSWORD, normalizedEmail)
                 .map(id -> lockAccount(id, ErrorCode.AUTHENTICATION_FAILED))
