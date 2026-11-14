@@ -102,4 +102,63 @@ class AuthIdentityRepositoryTest {
         assertFalse(exists);
     }
 
+    @DisplayName("""
+            findByProviderAndProviderUserId
+            SHOULD return password identity WITH loaded Account
+            WHEN matching provider and email exist
+            """)
+    @Test
+    void findByProviderAndProviderUserId_success() {
+        Account account = AccountTestBuilder.therapistVerifiedAccount();
+        AuthIdentity identity = AuthIdentityTestBuilder.passwordProviderAuthIdentity();
+        account.setAuthIdentity(identity);
+        accountRepository.saveAndFlush(account);
+        entityManager.clear();
+
+        Optional<AuthIdentity> result = authIdentityRepository.findByProviderAndProviderUserId(
+                AuthProvider.PASSWORD, identity.getProviderUserId());
+
+        assertThat(result).hasValueSatisfying(saved -> {
+            assertThat(saved.getId()).isEqualTo(account.getId());
+            assertThat(saved.getPasswordHash()).isEqualTo(identity.getPasswordHash());
+            assertThat(entityManager.getEntityManagerFactory().getPersistenceUnitUtil()
+                    .isLoaded(saved, "account")).isTrue();
+            assertThat(saved.getAccount().getId()).isEqualTo(account.getId());
+            assertThat(saved.getAccount().getStatus()).isEqualTo(account.getStatus());
+            assertThat(saved.getAccount().getType()).isEqualTo(account.getType());
+        });
+    }
+
+    @DisplayName("""
+            findByProviderAndProviderUserId
+            SHOULD return empty
+            WHEN email does not exist
+            """)
+    @Test
+    void findByProviderAndProviderUserId_unknownEmail() {
+        Optional<AuthIdentity> result = authIdentityRepository.findByProviderAndProviderUserId(
+                AuthProvider.PASSWORD, "unknown@gmail.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @DisplayName("""
+            findAccountIdByProviderAndProviderUserId
+            SHOULD return the Account id without loading identity state
+            WHEN the password identity exists
+            """)
+    @Test
+    void findAccountIdByProviderAndProviderUserId_success() {
+        Account account = AccountTestBuilder.therapistVerifiedAccount();
+        AuthIdentity identity = AuthIdentityTestBuilder.passwordProviderAuthIdentity();
+        account.setAuthIdentity(identity);
+        accountRepository.saveAndFlush(account);
+        entityManager.clear();
+
+        assertThat(authIdentityRepository.findAccountIdByProviderAndProviderUserId(
+                AuthProvider.PASSWORD, identity.getProviderUserId())).contains(account.getId());
+        assertThat(authIdentityRepository.findAccountIdByProviderAndProviderUserId(
+                AuthProvider.PASSWORD, "unknown@gmail.com")).isEmpty();
+    }
+
 }
