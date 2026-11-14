@@ -30,8 +30,12 @@ app:
 
   security:
     jwt:
+      access:
+        secret: dGhlcmFmbG93LXRlc3QtYWNjZXNzLXNpZ25pbmcta2V5LW9ubHk=
+        expiration: 15m
+      refresh:
+        expiration: 30d
       email:
         secret: ${JWT_EMAIL_SECRET:ed2097dd9e166b30d08959700ca2324308272efa2230cc748bec84dd7358e278}
         expiration: 60m #60 minutes
-
 
