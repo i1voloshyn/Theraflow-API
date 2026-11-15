@@ -31,6 +31,10 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "No account exists for the given identifier"),
 
+    GUARDIAN_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "A guardian profile already exists for this account"),
+
     ACCOUNT_DISABLED(
             HttpStatus.FORBIDDEN,
             "This account has been disabled. Please contact support."),
