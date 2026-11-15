@@ -18,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,25 +45,29 @@ class GuardianServiceTest {
             """)
     @Test
     void saveGuardian_success() {
-        SaveGuardianRequest request = new SaveGuardianRequest(" Joe ", " Canada ");
+        SaveGuardianRequest request = GuardianTestBuilder.saveGuardianRequestWithSpaces();
         Account account = AccountTestBuilder.guardianVerifiedAccount();
-        ReflectionTestUtils.setField(account, "id", ACCOUNT_ID);
-        Guardian savedGuardian = new Guardian(ACCOUNT_ID, "Joe", "Canada", null, null, account);
+        Guardian expectedGuardian = GuardianTestBuilder.savedGuardian(account);
 
         when(accountService.findById(ACCOUNT_ID)).thenReturn(account);
         when(guardianRepository.existsById(ACCOUNT_ID)).thenReturn(false);
-        when(guardianRepository.save(any(Guardian.class))).thenReturn(savedGuardian);
+        when(guardianRepository.save(any(Guardian.class))).thenReturn(expectedGuardian);
 
-        GuardianResponse response = guardianService.saveGuardian(request, ACCOUNT_ID);
+        GuardianResponse actualResponse = guardianService.saveGuardian(request, ACCOUNT_ID);
 
+        verify(accountService).findById(ACCOUNT_ID);
+        verify(guardianRepository).existsById(ACCOUNT_ID);
         ArgumentCaptor<Guardian> guardianCaptor = ArgumentCaptor.forClass(Guardian.class);
         verify(guardianRepository).save(guardianCaptor.capture());
+        verify(guardianMapper).toGuardianResponse(expectedGuardian);
         Guardian guardian = guardianCaptor.getValue();
 
-        assertThat(guardian.getFirstName()).isEqualTo("Joe");
-        assertThat(guardian.getLastName()).isEqualTo("Canada");
+        assertThat(guardian.getFirstName()).isEqualTo(expectedGuardian.getFirstName());
+        assertThat(guardian.getLastName()).isEqualTo(expectedGuardian.getLastName());
         assertThat(guardian.getAccount()).isSameAs(account);
-        assertThat(response).isEqualTo(new GuardianResponse(ACCOUNT_ID, "Joe", "Canada"));
+        assertThat(actualResponse.id()).isEqualTo(expectedGuardian.getId());
+        assertThat(actualResponse.firstName()).isEqualTo(expectedGuardian.getFirstName());
+        assertThat(actualResponse.lastName()).isEqualTo(expectedGuardian.getLastName());
     }
 
     @DisplayName("""
@@ -74,7 +77,7 @@ class GuardianServiceTest {
             """)
     @Test
     void saveGuardian_error() {
-        SaveGuardianRequest request = new SaveGuardianRequest("Joe", "Canada");
+        SaveGuardianRequest request = GuardianTestBuilder.defaultSaveGuardianRequest();
         Account account = AccountTestBuilder.therapistVerifiedAccount();
 
         when(accountService.findById(ACCOUNT_ID)).thenReturn(account);
@@ -93,7 +96,7 @@ class GuardianServiceTest {
             """)
     @Test
     void saveGuardian_error1() {
-        SaveGuardianRequest request = new SaveGuardianRequest("Joe", "Canada");
+        SaveGuardianRequest request = GuardianTestBuilder.defaultSaveGuardianRequest();
 
         when(accountService.findById(ACCOUNT_ID))
                 .thenThrow(new EntityNotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));
