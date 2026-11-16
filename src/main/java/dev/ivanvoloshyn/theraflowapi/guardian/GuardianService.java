@@ -3,9 +3,11 @@ package dev.ivanvoloshyn.theraflowapi.guardian;
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.ResourceConflictException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
+import dev.ivanvoloshyn.theraflowapi.guardian.dto.EditGuardianRequest;
 import dev.ivanvoloshyn.theraflowapi.guardian.dto.GuardianResponse;
 import dev.ivanvoloshyn.theraflowapi.guardian.dto.SaveGuardianRequest;
 import dev.ivanvoloshyn.theraflowapi.guardian.model.Guardian;
@@ -39,5 +41,20 @@ public class GuardianService {
 
         Guardian savedGuardian = guardianRepository.save(guardian);
         return guardianMapper.toGuardianResponse(savedGuardian);
+    }
+
+    @Transactional
+    public GuardianResponse editGuardian(EditGuardianRequest request, UUID accountId) {
+        Account account = accountService.findById(accountId);
+        if (account.getType() != AccountType.GUARDIAN) {
+            throw new PermissionException(ErrorCode.ACCESS_DENIED);
+        }
+
+        Guardian guardian = guardianRepository.findById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.GUARDIAN_NOT_FOUND));
+        guardian.setFirstName(request.firstName().trim());
+        guardian.setLastName(request.lastName().trim());
+
+        return guardianMapper.toGuardianResponse(guardian);
     }
 }
