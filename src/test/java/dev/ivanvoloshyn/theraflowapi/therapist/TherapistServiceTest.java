@@ -16,10 +16,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -48,6 +50,12 @@ class TherapistServiceTest {
 
         when(accountService.findById(ACCOUNT_ID)).thenReturn(account);
 
+        when(therapistRepository.save(any(Therapist.class))).thenAnswer(invocation -> {
+            Therapist therapist = invocation.getArgument(0);
+            ReflectionTestUtils.setField(therapist, "id", ACCOUNT_ID);
+            return therapist;
+        });
+
         TherapistResponse actualResponse = therapistService.saveProfile(request, ACCOUNT_ID);
 
         ArgumentCaptor<Therapist> therapistCaptor = ArgumentCaptor.forClass(Therapist.class);
@@ -60,7 +68,8 @@ class TherapistServiceTest {
         assertThat(savedTherapist.getLicenseNumber()).isEqualTo("LICENSE-123");
         assertThat(savedTherapist.getProfessionalTitle()).isEqualTo("Therapist");
         assertThat(savedTherapist.getAccount()).isSameAs(account);
-        assertThat(actualResponse).isEqualTo(new TherapistResponse());
+        assertThat(actualResponse).isEqualTo(new TherapistResponse(
+                ACCOUNT_ID, "Joe", "Toronto", "LICENSE-123", "Therapist"));
     }
 
     @DisplayName("""

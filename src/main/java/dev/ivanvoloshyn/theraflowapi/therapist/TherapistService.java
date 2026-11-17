@@ -38,8 +38,8 @@ public class TherapistService {
         );
         Therapist therapistProfile = therapistMapper.toTherapist(trimmedRequest);
         therapistProfile.setAccount(account);
-        therapistRepository.save(therapistProfile);
+        Therapist savedTherapist = therapistRepository.save(therapistProfile);
 
-        return new TherapistResponse();
+        return therapistMapper.toTherapistResponse(savedTherapist);
     }
 }

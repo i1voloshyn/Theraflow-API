@@ -1,6 +1,7 @@
 package dev.ivanvoloshyn.theraflowapi.therapist;
 
 import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistRequest;
+import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistResponse;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 
@@ -10,4 +11,6 @@ import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 public interface TherapistMapper {
 
     Therapist toTherapist(TherapistRequest request);
+
+    TherapistResponse toTherapistResponse(Therapist therapist);
 }
