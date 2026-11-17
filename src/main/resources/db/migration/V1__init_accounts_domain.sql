@@ -43,6 +43,36 @@ CREATE TABLE auth_identities
             )
 );
 
+CREATE TABLE therapists
+(
+    account_id         UUID                     NOT NULL,
+    first_name         TEXT                     NOT NULL,
+    last_name          TEXT                     NOT NULL,
+    license_number     TEXT                     NOT NULL,
+    professional_title TEXT                     NOT NULL,
+    created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_therapists PRIMARY KEY (account_id),
+
+    CONSTRAINT fk_therapists_account FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE RESTRICT,
+
+    CONSTRAINT ck_therapists_first_name_not_blank CHECK (first_name = trim(first_name) AND first_name <> ''),
+    CONSTRAINT ck_therapists_last_name_not_blank CHECK (last_name = trim(last_name) AND last_name <> ''),
+    CONSTRAINT ck_therapists_license_number_normalized
+        CHECK (
+            license_number = trim(license_number)
+                AND license_number <> ''
+            ),
+    CONSTRAINT ck_therapists_professional_title_not_blank
+        CHECK (
+            professional_title IS NULL
+                OR trim(professional_title) <> ''
+            ),
+
+    CONSTRAINT uq_therapists_license_number UNIQUE (license_number)
+);
+
 CREATE TABLE guardians
 (
     account_id UUID                     NOT NULL,
