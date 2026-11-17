@@ -13,4 +13,8 @@ public class AccountTestBuilder {
     public static Account therapistVerifiedAccount() {
         return new Account(AccountType.THERAPIST, AccountStatus.ACTIVE);
     }
+
+    public static Account guardianVerifiedAccount() {
+        return new Account(AccountType.GUARDIAN, AccountStatus.ACTIVE);
+    }
 }

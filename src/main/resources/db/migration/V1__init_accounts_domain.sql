@@ -43,6 +43,30 @@ CREATE TABLE auth_identities
             )
 );
 
+CREATE TABLE guardians
+(
+    account_id UUID                     NOT NULL,
+    first_name TEXT                     NOT NULL,
+    last_name  TEXT                     NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT ck_guardians_first_name_normalized
+        CHECK (
+            first_name = btrim(first_name)
+                AND first_name <> ''
+            ),
+    CONSTRAINT ck_guardians_last_name_normalized
+        CHECK (
+            last_name = btrim(last_name)
+                AND last_name <> ''
+            ),
+
+
+    CONSTRAINT pk_account_id PRIMARY KEY (account_id),
+    CONSTRAINT fk_guardians_accounts FOREIGN KEY (account_id) references accounts (id) ON DELETE CASCADE
+);
+
 CREATE TABLE password_reset_tokens
 (
     id         UUID                              DEFAULT gen_random_uuid(),
