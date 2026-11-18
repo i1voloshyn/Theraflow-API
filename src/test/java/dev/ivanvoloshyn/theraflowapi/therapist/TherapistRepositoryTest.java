@@ -13,10 +13,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ActiveProfiles("test")
 @DataJpaTest
@@ -40,15 +39,15 @@ class TherapistRepositoryTest {
         Account savedAccount = accountRepository.findAll().getFirst();
         Therapist therapist = defaultTestTherapist();
         therapist.setAccount(savedAccount);
-        therapistRepository.save(therapist);
+        Therapist persisted = therapistRepository.save(therapist);
         entityManager.flush();
         entityManager.clear();
 
-        Optional<Therapist> savedTherapist = therapistRepository.findById(savedAccount.getId());
+        Optional<Therapist> savedTherapist = therapistRepository.findById(persisted.getId());
 
         assertTrue(savedTherapist.isPresent());
+        assertThat(savedTherapist.get().getId()).isNotNull();
         assertThat(savedTherapist.get().getCreatedAt()).isNotNull();
-
     }
 
     private Therapist defaultTestTherapist() {
