@@ -5,9 +5,13 @@ import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistRequest;
 import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +29,11 @@ public class TherapistController {
             @AuthenticationPrincipal TheraflowUser user) {
         TherapistResponse response = therapistService.saveProfile(request, user.getAccountId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public PagedModel<TherapistResponse> findAll(
+            @PageableDefault() Pageable pageable) {
+        return new PagedModel<>(therapistService.getAll(pageable));
     }
 }

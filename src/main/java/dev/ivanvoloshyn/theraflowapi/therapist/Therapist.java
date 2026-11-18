@@ -3,11 +3,11 @@ package dev.ivanvoloshyn.theraflowapi.therapist;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -39,8 +39,8 @@ public class Therapist {
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
     private Instant updatedAt;
 
-    @OneToOne
-    @JoinColumn(name = "account_id", referencedColumnName = "id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "id", nullable = false)
     @Setter
     private Account account;
 

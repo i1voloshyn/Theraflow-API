@@ -29,7 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/auth/refresh");
     private static final Set<String> PUBLIC_GET_ENDPOINTS = Set.of(
             "/api/v1/auth/verify-email",
-            "/api/v1/auth/password-reset");
+            "/api/v1/auth/password-reset",
+            "/api/v1/therapists");
 
     private final JwtAuthTokenProvider jwtAuthTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
@@ -64,11 +65,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void authenticate(HttpServletRequest request) {
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+        if (SecurityContextHolder.getContext().getAuthentication()!=null) {
             return;
         }
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+        if (header==null || !header.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
             return;
         }
 
@@ -78,7 +79,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         switch (user.getStatus()) {
             case PENDING_VERIFICATION -> throw new PermissionException(ErrorCode.EMAIL_NOT_VERIFIED);
             case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
-            case ACTIVE -> { }
+            case ACTIVE -> {
+            }
         }
         user.eraseCredentials();
 

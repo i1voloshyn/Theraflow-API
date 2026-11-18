@@ -88,6 +88,9 @@ public enum ErrorCode {
     VALIDATION_FAILED(
             HttpStatus.BAD_REQUEST,
             "One or more fields are invalid. See 'errors' for details"),
+    SORT_PROPERTY_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "The requested sort property is not supported"),
     PASSWORD_RESET_TOKEN_INVALID(
             HttpStatus.BAD_REQUEST,
             "The password reset link is invalid or has expired. Please request a new password reset link.");
