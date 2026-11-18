@@ -27,8 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/v1/auth/password-reset",
             "/api/v1/auth/password-reset/confirm",
             "/api/v1/auth/refresh");
+
+    private static final Set<String> PUBLIC_PATCH_ENDPOINTS = Set.of(
+            "/api/v1/auth/verify-email");
     private static final Set<String> PUBLIC_GET_ENDPOINTS = Set.of(
-            "/api/v1/auth/verify-email",
             "/api/v1/auth/password-reset",
             "/api/v1/therapists");
 
@@ -39,7 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static boolean isPublicAuthenticationRequest(HttpServletRequest request) {
         String path = request.getRequestURI().substring(request.getContextPath().length());
         return ("POST".equals(request.getMethod()) && PUBLIC_POST_ENDPOINTS.contains(path))
-                || ("GET".equals(request.getMethod()) && PUBLIC_GET_ENDPOINTS.contains(path));
+                || ("GET".equals(request.getMethod()) && PUBLIC_GET_ENDPOINTS.contains(path)
+                || ("PATCH".equals(request.getMethod()) && PUBLIC_PATCH_ENDPOINTS.contains(path)));
     }
 
     @Override
