@@ -45,6 +45,7 @@ CREATE TABLE auth_identities
 
 CREATE TABLE therapists
 (
+    id                 UUID,
     account_id         UUID                     NOT NULL,
     first_name         TEXT                     NOT NULL,
     last_name          TEXT                     NOT NULL,
@@ -53,7 +54,7 @@ CREATE TABLE therapists
     created_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT pk_therapists PRIMARY KEY (account_id),
+    CONSTRAINT pk_therapists PRIMARY KEY (id),
 
     CONSTRAINT fk_therapists_account FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE RESTRICT,
 
