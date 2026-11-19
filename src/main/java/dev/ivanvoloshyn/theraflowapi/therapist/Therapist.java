@@ -1,6 +1,8 @@
 package dev.ivanvoloshyn.theraflowapi.therapist;
 
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.practicelocation.model.PracticeLocation;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -18,6 +21,8 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -44,6 +49,10 @@ public class Therapist {
     @Setter
     private Account account;
 
+    @OneToMany(mappedBy = "therapist", cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
+    @Setter(value = AccessLevel.NONE)
+    private Set<PracticeLocation> locations = new HashSet<>();
+
     public Therapist(String firstName, String lastName, String licenseNumber, String professionalTitle) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -51,5 +60,10 @@ public class Therapist {
         this.professionalTitle = professionalTitle;
     }
 
+    public void addLocation(PracticeLocation location) {
+        if (locations.add(location)) {
+            location.setTherapist(this);
+        }
+    }
 
 }
