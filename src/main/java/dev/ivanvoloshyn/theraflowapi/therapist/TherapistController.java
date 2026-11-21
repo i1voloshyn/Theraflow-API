@@ -36,4 +36,5 @@ public class TherapistController {
             @PageableDefault() Pageable pageable) {
         return new PagedModel<>(therapistService.getAll(pageable));
     }
+
 }

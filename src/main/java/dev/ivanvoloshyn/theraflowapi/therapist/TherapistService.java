@@ -4,6 +4,7 @@ import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.TheraflowApiException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
@@ -51,6 +52,11 @@ public class TherapistService {
         return therapistMapper.toTherapistResponse(savedTherapist);
     }
 
+    public Therapist findTherapistByAccountId(UUID accountId) {
+        return therapistRepository.findTherapistByAccountId(accountId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.THERAPIST_NOT_FOUND));
+    }
+
     public Page<TherapistResponse> getAll(Pageable pageable) {
         return therapistRepository.findAll(withStableSort(pageable))
                 .map(therapistMapper::toTherapistResponse);
@@ -71,12 +77,12 @@ public class TherapistService {
 
         // A unique final sort key keeps page boundaries deterministic for unchanged data.
         // For an unsorted request this also supplies the default order: id ascending.
-        if (sort.getOrderFor("id") == null) {
+        if (sort.getOrderFor("id")==null) {
             sort = sort.and(Sort.by("id"));
         }
 
         return pageable.isPaged()
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort)
-                : Pageable.unpaged(sort);
+                :Pageable.unpaged(sort);
     }
 }

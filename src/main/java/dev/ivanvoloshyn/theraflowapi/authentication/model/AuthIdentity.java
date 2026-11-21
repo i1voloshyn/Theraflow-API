@@ -2,10 +2,12 @@ package dev.ivanvoloshyn.theraflowapi.authentication.model;
 
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
@@ -46,7 +48,7 @@ public class AuthIdentity {
     @Column(insertable = false)
     private Instant updatedAt;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", referencedColumnName = "id")
     @MapsId
     @Setter

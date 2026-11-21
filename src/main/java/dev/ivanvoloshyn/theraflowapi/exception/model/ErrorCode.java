@@ -60,6 +60,10 @@ public enum ErrorCode {
     EMAIL_VERIFICATION_LINK_INVALID(
             HttpStatus.UNAUTHORIZED,
             "The email verification link is broken or has expired. Please request a new verification email"),
+    THERAPIST_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "No therapist profile exists for this account"),
+
 
     THERAFLOW_ERROR(
             HttpStatus.INTERNAL_SERVER_ERROR,
