@@ -9,14 +9,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor  
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PracticeLocationService {
     private final TherapistService therapistService;
     private final PracticeLocationMapper mapper;
+    private final PracticeLocationRepository repository;
 
     @Transactional
     public PracticeLocationResponse addPracticeLocation(PracticeLocationRequest request, UUID accountId) {
@@ -25,5 +28,17 @@ public class PracticeLocationService {
         therapist.addLocation(location);
 
         return mapper.toResponse(location);
+    }
+
+    public List<PracticeLocationResponse> getAll(UUID accountId) {
+        Therapist therapist = therapistService.findTherapistByAccountId(accountId);
+        Set<PracticeLocation> locations = therapist.getLocations();
+        return locations.stream().map(mapper::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public void delete(UUID locationId) {
+        repository.deleteById(locationId);
     }
 }

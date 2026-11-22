@@ -77,8 +77,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(BEARER_PREFIX.length()).trim();
-        TheraflowUser tokenUser = jwtAuthTokenProvider.extractUserDetails(token);
-        TheraflowUser user = userDetailsService.loadUserByAccountId(tokenUser.getAccountId());
+        TheraflowUser user = jwtAuthTokenProvider.extractUserDetails(token);
+      //  TheraflowUser user = userDetailsService.loadUserByAccountId(tokenUser.getAccountId());
         switch (user.getStatus()) {
             case PENDING_VERIFICATION -> throw new PermissionException(ErrorCode.EMAIL_NOT_VERIFIED);
             case DISABLED -> throw new PermissionException(ErrorCode.ACCOUNT_DISABLED);
