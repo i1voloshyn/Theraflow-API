@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +26,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TherapistService {
-    private static final Set<String> SORTABLE_PROPERTIES = Set.of(
-            "id", "firstName", "lastName", "licenseNumber", "professionalTitle");
 
     private final AccountService accountService;
     private final TherapistMapper therapistMapper;
@@ -57,32 +56,8 @@ public class TherapistService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.THERAPIST_NOT_FOUND));
     }
 
-    public Page<TherapistResponse> getAll(Pageable pageable) {
-        return therapistRepository.findAll(withStableSort(pageable))
+    public Page<TherapistResponse> getAll(String city, Pageable pageable) {
+        return therapistRepository.findAll(Specification.where(TherapistSpecifications.hasCity(city)), pageable)
                 .map(therapistMapper::toTherapistResponse);
-    }
-
-    private Pageable withStableSort(Pageable pageable) {
-        Sort sort = pageable.getSort();
-        for (Sort.Order order : sort) {
-            if (!SORTABLE_PROPERTIES.contains(order.getProperty())) {
-                throw new TheraflowApiException(ErrorCode.SORT_PROPERTY_INVALID);
-            }
-        }
-
-        // Future city sorting: first add the database column/relationship and entity mapping.
-        // Then allow "city" above (or map it to the actual location property here).
-        // Pass that sort to the repository so the database sorts BEFORE pagination;
-        // retain the id tie-breaker below when several therapists share the same city.
-
-        // A unique final sort key keeps page boundaries deterministic for unchanged data.
-        // For an unsorted request this also supplies the default order: id ascending.
-        if (sort.getOrderFor("id")==null) {
-            sort = sort.and(Sort.by("id"));
-        }
-
-        return pageable.isPaged()
-                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort)
-                :Pageable.unpaged(sort);
     }
 }

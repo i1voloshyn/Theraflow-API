@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -33,8 +34,9 @@ public class TherapistController {
 
     @GetMapping
     public PagedModel<TherapistResponse> findAll(
-            @PageableDefault() Pageable pageable) {
-        return new PagedModel<>(therapistService.getAll(pageable));
+            @RequestParam(required = true) String city,
+            @PageableDefault Pageable pageable) {
+        return new PagedModel<>(therapistService.getAll(city,pageable));
     }
 
 }
