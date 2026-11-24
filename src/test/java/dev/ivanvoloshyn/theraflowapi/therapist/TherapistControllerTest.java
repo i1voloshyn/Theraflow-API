@@ -20,12 +20,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.ACCOUNT_ID;
@@ -35,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,6 +142,53 @@ class TherapistControllerTest {
         verifyNoInteractions(therapistService);
     }
 
+    @DisplayName("""
+            findAll
+            SHOULD return a page of therapists
+            FOR the requested city and pagination
+            """)
+    @Test
+    void findAll_success() throws Exception {
+        String city = "Kraków";
+        PageRequest pageable = PageRequest.of(1, 2);
+        TherapistResponse therapist = new TherapistResponse(
+                UUID.randomUUID(), "Joe", "Toronto", "LICENSE-123", "Therapist");
+
+        when(therapistService.getAll(city, pageable))
+                .thenReturn(new PageImpl<>(List.of(therapist), pageable, 3));
+
+        MvcResult result = mockMvc.perform(get(THERAPISTS_ENDPOINT)
+                        .with(user(authenticatedUser()))
+                        .param("city", city)
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TherapistPageResponse response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), TherapistPageResponse.class);
+
+        assertThat(response.content()).containsExactly(therapist);
+        assertThat(response.page()).isEqualTo(new PageMetadata(2, 1, 3));
+
+        verify(therapistService).getAll(city, pageable);
+    }
+
+    @DisplayName("""
+            findAll
+            SHOULD return BAD_REQUEST without calling the service
+            WHEN city is missing
+            """)
+    @Test
+    void findAll_whenCityIsMissing_returnsBadRequest() throws Exception {
+        mockMvc.perform(get(THERAPISTS_ENDPOINT)
+                        .with(user(authenticatedUser())))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(therapistService);
+    }
+
     private static Stream<Arguments> invalidTherapistRequests() {
         TherapistRequest valid = TherapistTestBuilder.defaultTherapistRequest();
         return Stream.of(null, "", " \t\n")
@@ -157,5 +209,11 @@ class TherapistControllerTest {
 
     private TheraflowUser authenticatedUser() {
         return new TheraflowUser(ACCOUNT_ID, DEFAULT_EMAIL, null, AccountType.THERAPIST, AccountStatus.ACTIVE);
+    }
+
+    private record TherapistPageResponse(List<TherapistResponse> content, PageMetadata page) {
+    }
+
+    private record PageMetadata(int size, int number, long totalElements) {
     }
 }
