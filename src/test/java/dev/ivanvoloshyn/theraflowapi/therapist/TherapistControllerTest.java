@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.therapist;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountStatus;
 import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.config.SecurityConfiguration;
+import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorResponse;
@@ -140,6 +141,46 @@ class TherapistControllerTest {
             assertThat(validationError.code()).isEqualTo(ErrorCode.REQUIRED_FIELD.name());
         });
         verifyNoInteractions(therapistService);
+    }
+
+    @DisplayName("getTherapist SHOULD return the therapist WHEN the id exists")
+    @Test
+    void getTherapist_success() throws Exception {
+        UUID therapistId = UUID.randomUUID();
+        TherapistResponse expectedResponse = new TherapistResponse(
+                therapistId, "Joe", "Toronto", "LICENSE-123", "Therapist");
+
+        when(therapistService.findTherapistById(therapistId)).thenReturn(expectedResponse);
+
+        MvcResult result = mockMvc.perform(get(THERAPISTS_ENDPOINT + "/{id}", therapistId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        TherapistResponse actualResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(), TherapistResponse.class);
+
+        assertThat(actualResponse).isEqualTo(expectedResponse);
+        verify(therapistService).findTherapistById(therapistId);
+    }
+
+    @DisplayName("getTherapist SHOULD return NOT_FOUND WHEN the id does not exist")
+    @Test
+    void getTherapist_whenIdDoesNotExist_returnsNotFound() throws Exception {
+        UUID therapistId = UUID.randomUUID();
+        when(therapistService.findTherapistById(therapistId))
+                .thenThrow(new EntityNotFoundException(ErrorCode.THERAPIST_NOT_FOUND));
+
+        MvcResult result = mockMvc.perform(get(THERAPISTS_ENDPOINT + "/{id}", therapistId))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        ErrorResponse error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponse.class);
+
+        assertThat(error.code()).isEqualTo(ErrorCode.THERAPIST_NOT_FOUND);
+        verify(therapistService).findTherapistById(therapistId);
     }
 
     @DisplayName("""

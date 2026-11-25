@@ -6,20 +6,16 @@ import dev.ivanvoloshyn.theraflowapi.account.dto.AccountType;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
 import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
-import dev.ivanvoloshyn.theraflowapi.exception.exceptions.TheraflowApiException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistRequest;
 import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -54,6 +50,12 @@ public class TherapistService {
     public Therapist findTherapistByAccountId(UUID accountId) {
         return therapistRepository.findTherapistByAccountId(accountId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.THERAPIST_NOT_FOUND));
+    }
+
+    public TherapistResponse findTherapistById(UUID id) {
+        Therapist therapist = therapistRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.THERAPIST_NOT_FOUND));
+        return therapistMapper.toTherapistResponse(therapist);
     }
 
     public Page<TherapistResponse> getAll(String city, Pageable pageable) {

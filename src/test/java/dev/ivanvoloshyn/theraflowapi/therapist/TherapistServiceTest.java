@@ -3,6 +3,7 @@ package dev.ivanvoloshyn.theraflowapi.therapist;
 import dev.ivanvoloshyn.theraflowapi.account.AccountService;
 import dev.ivanvoloshyn.theraflowapi.account.AccountTestBuilder;
 import dev.ivanvoloshyn.theraflowapi.account.model.Account;
+import dev.ivanvoloshyn.theraflowapi.exception.EntityNotFoundException;
 import dev.ivanvoloshyn.theraflowapi.exception.exceptions.PermissionException;
 import dev.ivanvoloshyn.theraflowapi.exception.model.ErrorCode;
 import dev.ivanvoloshyn.theraflowapi.therapist.dto.TherapistRequest;
@@ -17,6 +18,9 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Optional;
+import java.util.UUID;
 
 import static dev.ivanvoloshyn.theraflowapi.fixtures.Constants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,5 +114,34 @@ class TherapistServiceTest {
 
         verify(accountService).findById(ACCOUNT_ID);
         verifyNoInteractions(therapistMapper, therapistRepository);
+    }
+
+    @DisplayName("findTherapistById SHOULD return a response WHEN the therapist exists")
+    @Test
+    void findTherapistById_success() {
+        UUID therapistId = UUID.randomUUID();
+        Therapist therapist = new Therapist("Joe", "Toronto", "LICENSE-123", "Therapist");
+        ReflectionTestUtils.setField(therapist, "id", therapistId);
+        when(therapistRepository.findById(therapistId)).thenReturn(Optional.of(therapist));
+
+        TherapistResponse response = therapistService.findTherapistById(therapistId);
+
+        assertThat(response).isEqualTo(new TherapistResponse(
+                therapistId, "Joe", "Toronto", "LICENSE-123", "Therapist"));
+        verify(therapistRepository).findById(therapistId);
+    }
+
+    @DisplayName("findTherapistById SHOULD throw THERAPIST_NOT_FOUND WHEN the therapist does not exist")
+    @Test
+    void findTherapistById_whenTherapistDoesNotExist_throwsEntityNotFoundException() {
+        UUID therapistId = UUID.randomUUID();
+        when(therapistRepository.findById(therapistId)).thenReturn(Optional.empty());
+
+        assertThatExceptionOfType(EntityNotFoundException.class)
+                .isThrownBy(() -> therapistService.findTherapistById(therapistId))
+                .matches(ex -> ex.getErrorCode() == ErrorCode.THERAPIST_NOT_FOUND);
+
+        verify(therapistRepository).findById(therapistId);
+        verifyNoInteractions(therapistMapper);
     }
 }
