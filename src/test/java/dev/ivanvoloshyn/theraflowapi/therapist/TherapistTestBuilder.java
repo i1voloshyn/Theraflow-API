@@ -11,4 +11,12 @@ public class TherapistTestBuilder {
     public static TherapistRequest therapistRequestWithWhitespace() {
         return new TherapistRequest(" Joe ", " Toronto ", " LICENSE-123 ", " Therapist ");
     }
+    public static Therapist defaultTestTherapist() {
+        return new Therapist(
+                "Joe",
+                "Toronto",
+                "PL 1234",
+                "Just Doc"
+        );
+    }
 }

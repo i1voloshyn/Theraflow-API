@@ -40,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -414,7 +415,7 @@ class AuthenticationControllerTest {
     @Test
     void emailVerification_success() throws Exception {
         String token = "valid-verification-access";
-        mockMvc.perform(get(VERIFY_EMAIL_ENDPOINT)
+        mockMvc.perform(patch(VERIFY_EMAIL_ENDPOINT)
                         .param("token", token)
                 )
                 .andExpect(status().isNoContent())
